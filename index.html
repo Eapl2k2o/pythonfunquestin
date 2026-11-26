@@ -1,0 +1,2463 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elysium Academy | Python Function Lab – Practical Coding Simulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- CodeMirror for Python Syntax Highlighting & Auto-Indentation -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <!-- Chart.js & jsPDF -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Pyodide WebAssembly Python Runtime -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .CodeMirror {
+            height: 280px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            border-radius: 0.75rem;
+            border: 1px solid #1e293b;
+            resize: vertical;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+    <!-- Toast Notification Banner -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden bg-slate-900 border border-indigo-500/50 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+        <i id="toast-icon" class="fas fa-info-circle text-indigo-400"></i>
+        <span id="toast-msg" class="text-xs sm:text-sm font-medium">Notification</span>
+    </div>
+
+    <!-- Student Registration Modal -->
+    <div id="reg-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                    <i class="fab fa-python"></i>
+                </div>
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-indigo-400">Elysium Academy</div>
+                    <h2 class="text-xl font-extrabold text-white">Python Function Lab</h2>
+                </div>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-300 mb-5 leading-relaxed">
+                Welcome to the <strong>Practical Coding Simulator</strong>. Write real Python functions, execute them live in the browser, and earn automatic marks across 40 scenario-based problems (100 Marks Total).
+            </p>
+            <form id="reg-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Student Full Name</label>
+                    <input type="text" id="input-student-name" required placeholder="e.g., Kavya Nair"
+                        class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Student ID / Roll Number</label>
+                    <input type="text" id="input-student-id" required placeholder="e.g., EA-PY-104"
+                        class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2">
+                    <span>Enter Python Function Lab</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
+            <!-- Academy Logo & App Name -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('dashboard')">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow">
+                    <i class="fab fa-python text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-extrabold text-sm sm:text-base tracking-tight text-white">Python Function Lab</span>
+                        <span class="hidden lg:inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Elysium Academy</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 hidden sm:block">Practical Coding Simulator</p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">
+                    <i class="fas fa-th-large sm:mr-1.5"></i><span class="hidden sm:inline">Dashboard</span>
+                </button>
+                <button onclick="switchView('workspace')" id="nav-workspace" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">
+                    <i class="fas fa-laptop-code sm:mr-1.5"></i><span class="hidden sm:inline">Simulator</span>
+                </button>
+                <button onclick="switchView('evaluation')" id="nav-evaluation" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">
+                    <i class="fas fa-award sm:mr-1.5"></i><span class="hidden sm:inline">Scorecard</span>
+                </button>
+                <button onclick="openTrainerAuth()" id="nav-trainer" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-400 hover:bg-amber-500/10 transition">
+                    <i class="fas fa-user-shield sm:mr-1.5"></i><span class="hidden sm:inline">Trainer Key</span>
+                </button>
+                <button onclick="switchView('docs')" id="nav-docs" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10 transition" title="Architecture, Setup & Backend API">
+                    <i class="fas fa-book-open sm:mr-1.5"></i><span class="hidden md:inline">Docs & API</span>
+                </button>
+            </nav>
+
+            <!-- Pyodide Status, Progress Pill & Student Profile -->
+            <div class="flex items-center gap-2.5">
+                <div id="py-status" class="hidden xl:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                    <span>Initializing Pyodide...</span>
+                </div>
+
+                <div class="hidden md:flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl text-xs">
+                    <span class="text-slate-400">Score:</span>
+                    <span id="header-score-pill" class="font-bold text-indigo-400">0 / 100</span>
+                </div>
+
+                <div onclick="document.getElementById('reg-modal').classList.remove('hidden')" class="cursor-pointer flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700 transition" title="Edit Student Profile">
+                    <div class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold" id="header-avatar">S</div>
+                    <div class="text-left hidden sm:block">
+                        <div id="header-student-name" class="text-xs font-semibold text-white leading-none">Student</div>
+                        <div id="header-student-id" class="text-[10px] text-slate-400 font-mono">ID: ---</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APPLICATION BODY -->
+    <main class="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 py-5">
+
+        <!-- ==================== VIEW 1: STUDENT DASHBOARD ==================== -->
+        <section id="view-dashboard" class="space-y-6">
+            <!-- Student Identity & Assessment Metadata Strip -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-indigo-400">Elysium Academy • Practical Assessment Portal</div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold text-white mt-0.5">Welcome back, <span id="dash-student-name">Student</span></h1>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Student ID: <strong id="dash-student-id" class="text-slate-200 font-mono">---</strong> &nbsp;•&nbsp;
+                        Assessment Date: <strong id="dash-date" class="text-slate-200"></strong>
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button onclick="openSheet(state.currentSheet)" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-600/25 transition flex items-center gap-2">
+                        <i class="fas fa-play"></i>
+                        <span>Resume Coding Simulator</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5 KPI Summary Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div class="text-xs text-slate-400 font-medium mb-1">Overall Score</div>
+                    <div class="flex items-baseline gap-1">
+                        <span id="dash-score" class="text-2xl sm:text-3xl font-extrabold text-indigo-400">0</span>
+                        <span class="text-xs text-slate-500">/ 100 Marks</span>
+                    </div>
+                    <div id="dash-grade-badge" class="mt-2 inline-block text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300">Requires More Practice</div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div class="text-xs text-slate-400 font-medium mb-1">Performance %</div>
+                    <div class="text-2xl sm:text-3xl font-extrabold text-white"><span id="dash-progress-pct">0</span>%</div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
+                        <div id="dash-progress-bar" class="bg-indigo-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div class="text-xs text-slate-400 font-medium mb-1">Total Questions</div>
+                    <div class="text-2xl sm:text-3xl font-extrabold text-white">40</div>
+                    <div class="text-[11px] text-slate-400 mt-2">4 Sheets × 2.5 Marks</div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div class="text-xs text-slate-400 font-medium mb-1">Completed</div>
+                    <div id="dash-completed" class="text-2xl sm:text-3xl font-extrabold text-emerald-400">0</div>
+                    <div class="text-[11px] text-emerald-500/80 mt-2">All Test Cases Passed</div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 col-span-2 lg:col-span-1">
+                    <div class="text-xs text-slate-400 font-medium mb-1">Pending Questions</div>
+                    <div id="dash-remaining" class="text-2xl sm:text-3xl font-extrabold text-amber-400">40</div>
+                    <div class="text-[11px] text-slate-400 mt-2">Remaining to Solve</div>
+                </div>
+            </div>
+
+            <!-- 4 Worksheet Cards -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-layer-group text-indigo-400"></i>
+                        <span>Python Function Worksheets (100 Marks Total)</span>
+                    </h2>
+                    <button onclick="switchView('evaluation')" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+                        <span>Open Detailed Scorecard</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div id="sheet-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+            </div>
+
+            <!-- Analytics Chart + Marking Rubric -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                    <h3 class="text-sm font-bold text-white mb-4">Worksheet Performance Analytics (Marks Obtained vs Max 25)</h3>
+                    <div class="h-60">
+                        <canvas id="dashboardChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-white mb-3">Automated Marking & Grading Scale</h3>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex justify-between p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                                <span class="font-semibold">90 – 100 Marks</span><span>Excellent</span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300">
+                                <span class="font-semibold">75 – 89 Marks</span><span>Very Good</span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-300">
+                                <span class="font-semibold">60 – 74 Marks</span><span>Good</span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300">
+                                <span class="font-semibold">40 – 59 Marks</span><span>Needs Improvement</span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300">
+                                <span class="font-semibold">Below 40 Marks</span><span>Requires More Practice</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400 leading-relaxed">
+                        <strong>Per Question (2.5 Marks):</strong> 0.5m Function Signature + 1.0m Core Logic + 1.0m Automated Test Cases.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== VIEW 2: 3-PANEL CODING SIMULATOR WORKSPACE ==================== -->
+        <section id="view-workspace" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+                <!-- LEFT SIDEBAR: 4 Worksheets & Question Navigation -->
+                <aside class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-3.5 h-fit">
+                    <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 px-1">Select Worksheet</div>
+                    <div class="grid grid-cols-2 gap-1.5 mb-4" id="sidebar-sheet-buttons"></div>
+
+                    <div class="flex items-center justify-between px-1 mb-2">
+                        <span id="sidebar-sheet-title" class="text-xs font-bold text-indigo-400">Sheet 1 Questions</span>
+                        <span id="sidebar-sheet-score" class="text-[11px] font-mono text-slate-400">0/25</span>
+                    </div>
+                    <div id="question-nav-list" class="space-y-1.5 max-h-[580px] overflow-y-auto pr-1"></div>
+                </aside>
+
+                <!-- CENTER PANEL: Problem Statement, Code Editor & Live Output Console -->
+                <div class="lg:col-span-6 space-y-4">
+                    <!-- Problem Description Card -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                            <span id="q-breadcrumb" class="text-xs font-bold text-indigo-400">Worksheet 1 • Question 1</span>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="navigateQuestion(-1)" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 transition" title="Previous Question">
+                                    <i class="fas fa-chevron-left mr-1"></i>Previous
+                                </button>
+                                <button onclick="navigateQuestion(1)" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 transition" title="Next Question">
+                                    Next<i class="fas fa-chevron-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <h2 id="q-title" class="text-lg sm:text-xl font-extrabold text-white mb-2">Question Title</h2>
+
+                        <div class="bg-indigo-950/30 border border-indigo-500/20 rounded-xl p-3 mb-3">
+                            <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-400 mb-0.5">
+                                <i class="fas fa-briefcase mr-1"></i>Real-Time Scenario
+                            </div>
+                            <p id="q-scenario" class="text-xs text-slate-300 leading-relaxed"></p>
+                        </div>
+
+                        <p id="q-problem" class="text-xs sm:text-sm text-slate-200 leading-relaxed mb-4"></p>
+
+                        <!-- Function Signature Spec -->
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-3 text-xs space-y-1.5">
+                            <div class="flex flex-wrap justify-between gap-2">
+                                <span class="text-slate-400">Required Function: <code id="q-func-name" class="text-amber-300 font-bold">func()</code></span>
+                                <span class="text-slate-400">Parameters: <code id="q-params" class="text-sky-300">a, b</code></span>
+                            </div>
+                            <div class="text-slate-400">Expected Return / Output: <span id="q-return-desc" class="text-slate-200"></span></div>
+                        </div>
+
+                        <!-- Sample Call & Expected Output -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                                <div class="font-semibold text-slate-400 mb-1">Sample Function Call / Input</div>
+                                <pre id="q-sample-in" class="font-mono text-slate-200 whitespace-pre-wrap"></pre>
+                            </div>
+                            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                                <div class="font-semibold text-slate-400 mb-1">Expected Output</div>
+                                <pre id="q-sample-out" class="font-mono text-emerald-400 whitespace-pre-wrap"></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Python Code Editor & Execution Controls -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-mono font-semibold text-slate-300"><i class="fab fa-python text-indigo-400 mr-1.5"></i>solution.py</span>
+                                <span class="text-[11px] text-slate-500 hidden sm:inline">Edit & test freely before submitting</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <button onclick="saveProgressManual()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition" title="Save Code Progress">
+                                    <i class="fas fa-save mr-1"></i>Save
+                                </button>
+                                <button onclick="resetCode()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition" title="Restore Starter Code">
+                                    <i class="fas fa-undo mr-1"></i>Reset
+                                </button>
+                                <button onclick="clearOutputConsole()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition" title="Clear Console">
+                                    <i class="fas fa-eraser mr-1"></i>Clear
+                                </button>
+                            </div>
+                        </div>
+
+                        <textarea id="code-editor"></textarea>
+
+                        <!-- Primary Action Bar -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 mt-3 pt-3 border-t border-slate-800">
+                            <button onclick="runCodeOnly()" id="btn-run" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
+                                <i class="fas fa-play"></i>
+                                <span>RUN CODE</span>
+                            </button>
+
+                            <button onclick="submitAnswer()" id="btn-submit" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2">
+                                <i class="fas fa-check-circle"></i>
+                                <span>SUBMIT ANSWER</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dedicated Output Console & Error Diagnostics -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                <i class="fas fa-terminal mr-1.5 text-indigo-400"></i>Live Output Console
+                            </span>
+                            <span id="console-exec-badge" class="text-[11px] font-mono text-slate-400">Status: Ready</span>
+                        </div>
+                        <div id="console-box" class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 font-mono text-xs text-slate-300 min-h-[130px] max-h-[240px] overflow-y-auto whitespace-pre-wrap">Click "RUN CODE" to execute your Python function and view live output here.</div>
+                    </div>
+
+                    <!-- Automated Test Case Evaluation Results -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                <i class="fas fa-vials mr-1.5 text-emerald-400"></i>Automated Test Case Results
+                            </span>
+                            <span id="tc-result-summary" class="text-xs font-bold text-slate-400">Not Submitted</span>
+                        </div>
+                        <div id="test-cases-list" class="space-y-2">
+                            <div class="text-xs text-slate-500 italic p-3 bg-slate-950 rounded-xl border border-slate-800">
+                                Click "SUBMIT ANSWER" when ready to validate your function against automated test cases and earn marks.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT PANEL: Question Metadata, Marks, Hint & Progress -->
+                <aside class="lg:col-span-3 space-y-4">
+                    <!-- Question Info & Marking Card -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Question Info & Marks</div>
+                        <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-800">
+                            <span class="text-slate-400">Difficulty</span>
+                            <span id="right-difficulty" class="font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400">Easy</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-800">
+                            <span class="text-slate-400">Topic</span>
+                            <span id="right-topic" class="font-semibold text-slate-200 text-right">Functions</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-800">
+                            <span class="text-slate-400">Max Marks</span>
+                            <span class="font-bold text-white">2.5 Marks</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs py-1.5">
+                            <span class="text-slate-400">Your Score</span>
+                            <span id="right-earned-marks" class="font-extrabold text-indigo-400">0.0 / 2.5</span>
+                        </div>
+
+                        <!-- Rubric Breakdown -->
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] space-y-1 text-slate-400">
+                            <div class="font-semibold text-slate-300 mb-1">Marking Breakdown:</div>
+                            <div class="flex justify-between"><span>• Function Structure</span><span>0.5 Marks</span></div>
+                            <div class="flex justify-between"><span>• Core Logic & Return</span><span>1.0 Mark</span></div>
+                            <div class="flex justify-between"><span>• Test Cases Passed</span><span>1.0 Mark</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Hint Card -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-amber-400">
+                                <i class="fas fa-lightbulb mr-1"></i>Need a Clue?
+                            </span>
+                            <button onclick="toggleHint()" id="btn-show-hint" class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-semibold transition">
+                                SHOW HINT
+                            </button>
+                        </div>
+                        <div id="hint-box" class="hidden mt-2 p-3 rounded-xl bg-amber-950/30 border border-amber-500/20 text-xs text-amber-200 leading-relaxed"></div>
+                        <p id="hint-placeholder" class="text-xs text-slate-500">Click "SHOW HINT" for a beginner-friendly hint without revealing the solution.</p>
+                    </div>
+
+                    <!-- Quick Sheet Progress -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Overall Lab Progress</div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-300">Completed</span>
+                            <span id="right-progress-text" class="font-bold text-emerald-400">0 / 40</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden mb-3">
+                            <div id="right-progress-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <button onclick="finalizeWorksheet()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-emerald-600 text-white text-xs font-semibold transition">
+                            <i class="fas fa-flag-checkered mr-1.5"></i>Mark Worksheet Completed
+                        </button>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- ==================== VIEW 3: STUDENT SCORECARD & REPORT ==================== -->
+        <section id="view-evaluation" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Elysium Academy • Final Assessment Scorecard</span>
+                    <h2 class="text-2xl font-extrabold text-white mt-1" id="eval-student-header">Student Scorecard</h2>
+                    <p class="text-xs text-slate-400 mt-1">Comprehensive automated evaluation across all 40 function-based Python challenges.</p>
+                </div>
+                <button onclick="downloadPDFReport()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-600/25 flex items-center gap-2 transition">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Download Assessment Report (PDF)</span>
+                </button>
+            </div>
+
+            <!-- 6 Summary Metrics -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div class="text-xs text-slate-400">Total Marks</div>
+                    <div class="text-2xl font-extrabold text-white mt-1"><span id="eval-marks">0</span> <span class="text-xs font-normal text-slate-400">/ 100</span></div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div class="text-xs text-slate-400">Percentage</div>
+                    <div class="text-2xl font-extrabold text-indigo-400 mt-1"><span id="eval-pct">0</span>%</div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div class="text-xs text-slate-400">Performance Level</div>
+                    <div id="eval-status" class="text-sm font-extrabold text-amber-400 mt-2">Requires More Practice</div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div class="text-xs text-slate-400">Correct Questions</div>
+                    <div id="eval-q-correct" class="text-2xl font-extrabold text-emerald-400 mt-1">0</div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div class="text-xs text-slate-400">Incorrect / Unsolved</div>
+                    <div id="eval-q-incorrect" class="text-2xl font-extrabold text-rose-400 mt-1">40</div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div class="text-xs text-slate-400">Test Cases Passed</div>
+                    <div class="text-2xl font-extrabold text-sky-400 mt-1"><span id="eval-tc-passed">0</span><span class="text-xs text-slate-500">/<span id="eval-tc-total">120</span></span></div>
+                </div>
+            </div>
+
+            <!-- Sheet Performance & Recommendations -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                    <h3 class="text-base font-bold text-white mb-4">Sheet-Wise Marks Breakdown</h3>
+                    <div id="sheet-performance-bars" class="space-y-3"></div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                    <h3 class="text-base font-bold text-white mb-4">Topic Mastery & Improvement Feedback</h3>
+                    <div id="improvement-suggestions" class="space-y-2.5 text-xs"></div>
+                </div>
+            </div>
+
+            <!-- 40-Question Detailed Ledger -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 overflow-x-auto">
+                <h3 class="text-base font-bold text-white mb-4">Question-Wise Evaluation Ledger (All 40 Questions)</h3>
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                            <th class="py-2.5 px-3">Q#</th>
+                            <th class="py-2.5 px-3">Sheet</th>
+                            <th class="py-2.5 px-3">Function Name</th>
+                            <th class="py-2.5 px-3">Problem Title</th>
+                            <th class="py-2.5 px-3">Difficulty</th>
+                            <th class="py-2.5 px-3">Test Cases</th>
+                            <th class="py-2.5 px-3">Marks (2.5)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eval-table-body" class="divide-y divide-slate-800/60"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ==================== VIEW 4: TRAINER DASHBOARD & ANSWER KEY ==================== -->
+        <section id="view-trainer" class="hidden space-y-6">
+            <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Elysium Academy — Trainer Answer Key & Cohort Monitor</h2>
+                        <p class="text-xs text-amber-200/80">Protected Faculty Portal: Reference solutions, explanations, test cases, and student evaluation records.</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="trainer-sheet-filter" onchange="renderTrainerAnswerKey()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <option value="all">All 4 Worksheets (40 Solutions)</option>
+                        <option value="1">Sheet 1: Function Fundamentals</option>
+                        <option value="2">Sheet 2: Advanced Function Arguments</option>
+                        <option value="3">Sheet 3: Function Logic & Reusability</option>
+                        <option value="4">Sheet 4: Real-Time Function Applications</option>
+                    </select>
+                    <button onclick="downloadPDFReport()" class="bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold px-3 py-2 rounded-xl text-white">
+                        <i class="fas fa-download mr-1"></i>Download Report
+                    </button>
+                    <button onclick="lockTrainerView()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-xl text-slate-300">
+                        <i class="fas fa-lock mr-1"></i>Lock
+                    </button>
+                </div>
+            </div>
+
+            <!-- Individual Student Marks Overview -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 overflow-x-auto">
+                <h3 class="text-sm font-bold text-white mb-3">Student Performance Record</h3>
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400">
+                            <th class="py-2 px-3">Student ID</th>
+                            <th class="py-2 px-3">Student Name</th>
+                            <th class="py-2 px-3">Sheet 1 (25)</th>
+                            <th class="py-2 px-3">Sheet 2 (25)</th>
+                            <th class="py-2 px-3">Sheet 3 (25)</th>
+                            <th class="py-2 px-3">Sheet 4 (25)</th>
+                            <th class="py-2 px-3">Total (100)</th>
+                            <th class="py-2 px-3">Performance Level</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trainer-cohort-body" class="divide-y divide-slate-800"></tbody>
+                </table>
+            </div>
+
+            <!-- All 40 Reference Solutions -->
+            <div id="trainer-answer-list" class="space-y-4"></div>
+        </section>
+
+        <!-- ==================== VIEW 5: PROJECT ARCHITECTURE, SECURITY & FLASK BACKEND ==================== -->
+        <section id="view-docs" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                    <h3 class="text-base font-bold text-white mb-2"><i class="fas fa-folder-tree text-indigo-400 mr-2"></i>Modular Project Structure & Setup</h3>
+                    <p class="text-xs text-slate-400 mb-3">Consolidated into this self-contained single-file web application for instant browser execution via Pyodide WebAssembly, with logical data modules for Questions, Test Cases, and Trainer Solutions.</p>
+                    <pre class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 font-mono text-xs text-slate-300 leading-relaxed">python-function-lab/
+├── index.html          # Complete Single-File App (UI + Pyodide Simulator)
+├── ARCHITECTURE:
+│   ├── SHEETS[]        # 4 Function Worksheet Definitions
+│   ├── QUESTIONS[]     # 40 Scenario Problems + Hints + Test Cases + Solutions
+│   ├── Pyodide VM      # Sandboxed Client-Side Python 3.11 Runtime
+│   └── Evaluator       # Structure (0.5) + Logic (1.0) + Test Cases (1.0)
+└── backend/app.py      # Optional Production Flask + SQLite Evaluator</pre>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                    <h3 class="text-base font-bold text-white mb-2"><i class="fas fa-shield-alt text-amber-400 mr-2"></i>Security & Storage Architecture Note</h3>
+                    <ul class="text-xs text-slate-300 space-y-2.5 leading-relaxed">
+                        <li class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                            <strong class="text-amber-400">Client-Side LocalStorage Disclaimer:</strong> Browser <code>localStorage</code> is ideal for auto-saving student code drafts locally, but is inspectable by tech-savvy users. For proctored high-stakes academy exams, deploy the Flask + SQLite backend below so test cases and trainer solutions stay strictly server-side.
+                        </li>
+                        <li class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                            <strong class="text-emerald-400">Sandboxed Code Execution:</strong> Both the browser Pyodide VM and the Flask subprocess runner enforce strict execution timeouts and block dangerous system calls (<code>os</code>, <code>subprocess</code>, file I/O) to prevent infinite loops or server compromise.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Optional Centralized Server</span>
+                        <h3 class="text-lg font-bold text-white">Production Python Flask + SQLite Backend (<code class="text-emerald-400">app.py</code>)</h3>
+                    </div>
+                    <button onclick="copyFlaskCode()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition">
+                        <i class="fas fa-copy mr-1.5"></i>Copy Flask Code
+                    </button>
+                </div>
+                <pre id="flask-source-code" class="bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-emerald-300 overflow-x-auto max-h-[480px] leading-relaxed"></pre>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Trainer Authentication Modal -->
+    <div id="trainer-pin-modal" class="fixed inset-0 z-50 hidden bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <h3 class="text-lg font-bold text-white mb-1"><i class="fas fa-user-shield text-amber-400 mr-2"></i>Elysium Academy Trainer Access</h3>
+            <p class="text-xs text-slate-400 mb-4">Enter the faculty PIN to view all 40 solutions and cohort evaluation analytics. (Trainer PIN: <code class="text-amber-400 font-bold">2026</code>)</p>
+            <input type="password" id="trainer-pin-input" placeholder="Enter PIN (2026)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white mb-4 focus:outline-none focus:border-amber-500">
+            <div class="flex justify-end gap-2">
+                <button onclick="document.getElementById('trainer-pin-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300">Cancel</button>
+                <button onclick="verifyTrainerPin()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-xs font-bold text-white">Unlock Answer Key</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // =========================================================================
+    // 1. DATA MODULE: 4 WORKSHEETS & 40 FUNCTION-BASED QUESTIONS (2.5 MARKS EACH)
+    // =========================================================================
+    // Difficulty Distribution per Sheet: 3 Easy, 4 Medium, 3 Hard (10 per sheet)
+    // Total Questions: 40 | Marks per Question: 2.5 | Total Marks: 100
+
+    const SHEETS = [
+        {
+            id: 1,
+            title: "Sheet 1: Function Fundamentals",
+            shortTitle: "Function Fundamentals",
+            description: "Master def syntax, function calling, positional parameters, return statements, void functions, and single-responsibility logic.",
+            topics: ["def syntax", "Function Calling", "Parameters", "return", "Void vs Returning"]
+        },
+        {
+            id: 2,
+            title: "Sheet 2: Advanced Function Arguments",
+            shortTitle: "Advanced Arguments",
+            description: "Work with default arguments, keyword arguments, variable-length *args, **kwargs, and tuple unpacking from multiple returns.",
+            topics: ["Default Args", "Keyword Args", "*args", "**kwargs", "Multiple Returns"]
+        },
+        {
+            id: 3,
+            title: "Sheet 3: Function Logic and Reusability",
+            shortTitle: "Logic & Reusability",
+            description: "Build nested functions, helper function pipelines, recursive algorithms, lambda expressions, and clean local/global scope.",
+            topics: ["Nested Functions", "Recursion", "Lambda", "Local/Global Scope", "Reusability"]
+        },
+        {
+            id: 4,
+            title: "Sheet 4: Real-Time Function-Based Applications",
+            shortTitle: "Real-Time Applications",
+            description: "Architect multi-function mini-applications for payroll, banking, billing, hotel booking, inventory, and academy analytics.",
+            topics: ["Multi-Function Design", "Modular Systems", "Business Logic", "Integration"]
+        }
+    ];
+
+    const QUESTIONS = [
+        // ==================== SHEET 1: FUNCTION FUNDAMENTALS (Q1 - Q10) ====================
+        {
+            id: 1, sheet: 1, num: 1, difficulty: "Easy", marks: 2.5, topic: "Function Definition & Return",
+            title: "Student Total Marks Calculator",
+            scenario: "An academic grading module needs a reusable function to sum a student's marks across three core subjects: Python, SQL, and Web Development.",
+            problem: "Create a function named `calculate_total_marks(m1, m2, m3)` that accepts three integer/float marks and returns their sum.",
+            funcName: "calculate_total_marks",
+            params: "m1, m2, m3",
+            returnDesc: "Returns the numeric sum of m1, m2, and m3.",
+            sampleCall: "print(calculate_total_marks(85, 90, 88))",
+            expectedOut: "263",
+            hint: "Use `def calculate_total_marks(m1, m2, m3):` and return `m1 + m2 + m3`.",
+            starterCode: "def calculate_total_marks(m1, m2, m3):\n    # Write your logic here\n    pass\n\n# Test your function below:\nprint(calculate_total_marks(85, 90, 88))\n",
+            testCases: [
+                { call: "calculate_total_marks(85, 90, 88)", expected: 263 },
+                { call: "calculate_total_marks(70, 75, 80)", expected: 225 },
+                { call: "calculate_total_marks(100, 95, 90)", expected: 285 }
+            ],
+            solution: "def calculate_total_marks(m1, m2, m3):\n    return m1 + m2 + m3",
+            explanation: "Defines a function with 3 parameters and uses the `return` statement to send back their arithmetic sum."
+        },
+        {
+            id: 2, sheet: 1, num: 2, difficulty: "Easy", marks: 2.5, topic: "Parameters & Return Value",
+            title: "Employee Monthly Salary Calculator",
+            scenario: "An HR payroll system computes monthly gross salary by combining Basic Pay, House Rent Allowance (HRA), and Dearness Allowance (DA).",
+            problem: "Create a function `calculate_monthly_salary(basic, hra, da)` that returns the total monthly salary (`basic + hra + da`).",
+            funcName: "calculate_monthly_salary",
+            params: "basic, hra, da",
+            returnDesc: "Returns total monthly salary (float or int).",
+            sampleCall: "print(calculate_monthly_salary(30000, 6000, 4500))",
+            expectedOut: "40500",
+            hint: "Add all three salary components inside the function and return the total.",
+            starterCode: "def calculate_monthly_salary(basic, hra, da):\n    # Write your logic here\n    pass\n\nprint(calculate_monthly_salary(30000, 6000, 4500))\n",
+            testCases: [
+                { call: "calculate_monthly_salary(30000, 6000, 4500)", expected: 40500 },
+                { call: "calculate_monthly_salary(20000, 4000, 2000)", expected: 26000 },
+                { call: "calculate_monthly_salary(50000, 15000, 10000)", expected: 75000 }
+            ],
+            solution: "def calculate_monthly_salary(basic, hra, da):\n    return basic + hra + da",
+            explanation: "Accepts three compensation parameters and returns their sum."
+        },
+        {
+            id: 3, sheet: 1, num: 3, difficulty: "Easy", marks: 2.5, topic: "Arithmetic inside Functions",
+            title: "Shopping Discount Calculator",
+            scenario: "An e-commerce checkout applies a percentage discount to a product's listed price.",
+            problem: "Create a function named `calculate_discount(price, discount)` that returns the final payable price after subtracting `discount%` from `price`.",
+            funcName: "calculate_discount",
+            params: "price, discount",
+            returnDesc: "Returns final price as float: price - (price * discount / 100).",
+            sampleCall: "print(calculate_discount(1000, 10))",
+            expectedOut: "900.0",
+            hint: "Compute `discount_amount = price * discount / 100` and return `price - discount_amount`.",
+            starterCode: "def calculate_discount(price, discount):\n    # Write your logic here\n    pass\n\nprint(calculate_discount(1000, 10))\n",
+            testCases: [
+                { call: "calculate_discount(1000, 10)", expected: 900.0 },
+                { call: "calculate_discount(500, 20)", expected: 400.0 },
+                { call: "calculate_discount(2000, 5)", expected: 1900.0 }
+            ],
+            solution: "def calculate_discount(price, discount):\n    final_price = price - (price * discount / 100)\n    return final_price",
+            explanation: "Calculates percentage discount amount and subtracts it from the original price."
+        },
+        {
+            id: 4, sheet: 1, num: 4, difficulty: "Medium", marks: 2.5, topic: "Conditional Logic in Functions",
+            title: "Electricity Bill Calculator",
+            scenario: "A utility board charges ₹2 per unit for the first 100 units, and ₹5 per unit for any units consumed above 100.",
+            problem: "Create a function `calculate_electricity_bill(units)` that calculates and returns the total electricity bill based on units consumed.",
+            funcName: "calculate_electricity_bill",
+            params: "units",
+            returnDesc: "Returns total bill amount (int/float).",
+            sampleCall: "print(calculate_electricity_bill(150))",
+            expectedOut: "450",
+            hint: "If `units <= 100`, return `units * 2`. Otherwise, return `(100 * 2) + (units - 100) * 5`.",
+            starterCode: "def calculate_electricity_bill(units):\n    # First 100 units @ 2/unit, above 100 @ 5/unit\n    pass\n\nprint(calculate_electricity_bill(150))\n",
+            testCases: [
+                { call: "calculate_electricity_bill(80)", expected: 160 },
+                { call: "calculate_electricity_bill(100)", expected: 200 },
+                { call: "calculate_electricity_bill(150)", expected: 450 }
+            ],
+            solution: "def calculate_electricity_bill(units):\n    if units <= 100:\n        return units * 2\n    return (100 * 2) + (units - 100) * 5",
+            explanation: "Uses an `if` branch inside the function to split consumption into two tariff slabs."
+        },
+        {
+            id: 5, sheet: 1, num: 5, difficulty: "Medium", marks: 2.5, topic: "Formula Implementation",
+            title: "Simple Interest Calculator",
+            scenario: "A micro-finance bank computes simple interest for short-term educational loans.",
+            problem: "Create a function `calculate_simple_interest(principal, rate, time)` that returns Simple Interest using `(principal * rate * time) / 100`.",
+            funcName: "calculate_simple_interest",
+            params: "principal, rate, time",
+            returnDesc: "Returns simple interest value.",
+            sampleCall: "print(calculate_simple_interest(10000, 5, 2))",
+            expectedOut: "1000.0",
+            hint: "Multiply principal, rate, and time, then divide by 100 and return the result.",
+            starterCode: "def calculate_simple_interest(principal, rate, time):\n    # Write your logic here\n    pass\n\nprint(calculate_simple_interest(10000, 5, 2))\n",
+            testCases: [
+                { call: "calculate_simple_interest(10000, 5, 2)", expected: 1000.0 },
+                { call: "calculate_simple_interest(5000, 8, 3)", expected: 1200.0 },
+                { call: "calculate_simple_interest(12000, 10, 1)", expected: 1200.0 }
+            ],
+            solution: "def calculate_simple_interest(principal, rate, time):\n    return (principal * rate * time) / 100",
+            explanation: "Implements the standard Simple Interest formula inside a clean reusable function."
+        },
+        {
+            id: 6, sheet: 1, num: 6, difficulty: "Medium", marks: 2.5, topic: "Boolean/String Return Logic",
+            title: "Student Certification Eligibility Checker",
+            scenario: "Elysium Academy awards course completion certificates only if a student has at least 75% attendance AND at least 60 exam marks.",
+            problem: "Create a function `check_eligibility(attendance, marks)` that returns `'Eligible'` if `attendance >= 75` and `marks >= 60`, otherwise returns `'Not Eligible'`.",
+            funcName: "check_eligibility",
+            params: "attendance, marks",
+            returnDesc: "Returns string 'Eligible' or 'Not Eligible'.",
+            sampleCall: "print(check_eligibility(82, 74))",
+            expectedOut: "Eligible",
+            hint: "Use the logical `and` operator to verify both conditions simultaneously.",
+            starterCode: "def check_eligibility(attendance, marks):\n    # Write your logic here\n    pass\n\nprint(check_eligibility(82, 74))\n",
+            testCases: [
+                { call: "check_eligibility(82, 74)", expected: "Eligible" },
+                { call: "check_eligibility(70, 85)", expected: "Not Eligible" },
+                { call: "check_eligibility(75, 60)", expected: "Eligible" }
+            ],
+            solution: "def check_eligibility(attendance, marks):\n    if attendance >= 75 and marks >= 60:\n        return \"Eligible\"\n    return \"Not Eligible\"",
+            explanation: "Evaluates compound conditions with `and` and returns exact status strings."
+        },
+        {
+            id: 7, sheet: 1, num: 7, difficulty: "Medium", marks: 2.5, topic: "Unit Conversion Functions",
+            title: "Celsius to Fahrenheit Temperature Converter",
+            scenario: "An IoT weather dashboard receives sensor readings in Celsius and converts them to Fahrenheit for US clients.",
+            problem: "Create a function `celsius_to_fahrenheit(celsius)` that converts Celsius to Fahrenheit using `(celsius * 9/5) + 32` and returns the result.",
+            funcName: "celsius_to_fahrenheit",
+            params: "celsius",
+            returnDesc: "Returns temperature in Fahrenheit (float).",
+            sampleCall: "print(celsius_to_fahrenheit(25))",
+            expectedOut: "77.0",
+            hint: "Apply `(celsius * 9 / 5) + 32` and return the computed value.",
+            starterCode: "def celsius_to_fahrenheit(celsius):\n    # Write your logic here\n    pass\n\nprint(celsius_to_fahrenheit(25))\n",
+            testCases: [
+                { call: "celsius_to_fahrenheit(0)", expected: 32.0 },
+                { call: "celsius_to_fahrenheit(25)", expected: 77.0 },
+                { call: "celsius_to_fahrenheit(100)", expected: 212.0 }
+            ],
+            solution: "def celsius_to_fahrenheit(celsius):\n    return (celsius * 9 / 5) + 32",
+            explanation: "Converts Celsius to Fahrenheit accurately using floating-point arithmetic."
+        },
+        {
+            id: 8, sheet: 1, num: 8, difficulty: "Hard", marks: 2.5, topic: "Functions & Tax Calculation",
+            title: "Product Total Cost Calculator with Tax",
+            scenario: "A wholesale POS billing function calculates total product cost for a given unit price, quantity, and GST tax percentage.",
+            problem: "Create a function `calculate_product_cost(unit_price, quantity, tax_percent)` that computes subtotal (`unit_price * quantity`), adds `tax_percent%`, and returns the rounded total (2 decimal places).",
+            funcName: "calculate_product_cost",
+            params: "unit_price, quantity, tax_percent",
+            returnDesc: "Returns final cost rounded to 2 decimal places.",
+            sampleCall: "print(calculate_product_cost(250, 4, 18))",
+            expectedOut: "1180.0",
+            hint: "Compute `subtotal = unit_price * quantity`, then `total = subtotal + (subtotal * tax_percent / 100)`, and return `round(total, 2)`.",
+            starterCode: "def calculate_product_cost(unit_price, quantity, tax_percent):\n    # Write your logic here\n    pass\n\nprint(calculate_product_cost(250, 4, 18))\n",
+            testCases: [
+                { call: "calculate_product_cost(250, 4, 18)", expected: 1180.0 },
+                { call: "calculate_product_cost(100, 3, 5)", expected: 315.0 },
+                { call: "calculate_product_cost(49.99, 2, 10)", expected: 109.98 }
+            ],
+            solution: "def calculate_product_cost(unit_price, quantity, tax_percent):\n    subtotal = unit_price * quantity\n    total = subtotal * (1 + tax_percent / 100)\n    return round(total, 2)",
+            explanation: "Combines multiplication, percentage tax addition, and `round(..., 2)` for clean currency precision."
+        },
+        {
+            id: 9, sheet: 1, num: 9, difficulty: "Hard", marks: 2.5, topic: "Percentage & Rounding in Functions",
+            title: "Employee Attendance Percentage Calculator",
+            scenario: "An HR compliance tool calculates each employee's monthly attendance percentage from total working days and days present.",
+            problem: "Create a function `calculate_attendance_percentage(days_present, total_days)` that returns the percentage `(days_present / total_days) * 100` rounded to 2 decimal places. Return `0.0` if `total_days <= 0`.",
+            funcName: "calculate_attendance_percentage",
+            params: "days_present, total_days",
+            returnDesc: "Returns attendance percentage rounded to 2 decimal places.",
+            sampleCall: "print(calculate_attendance_percentage(22, 25))",
+            expectedOut: "88.0",
+            hint: "Check `if total_days <= 0: return 0.0` first to avoid ZeroDivisionError.",
+            starterCode: "def calculate_attendance_percentage(days_present, total_days):\n    # Write your logic here\n    pass\n\nprint(calculate_attendance_percentage(22, 25))\n",
+            testCases: [
+                { call: "calculate_attendance_percentage(22, 25)", expected: 88.0 },
+                { call: "calculate_attendance_percentage(19, 24)", expected: 79.17 },
+                { call: "calculate_attendance_percentage(10, 0)", expected: 0.0 }
+            ],
+            solution: "def calculate_attendance_percentage(days_present, total_days):\n    if total_days <= 0:\n        return 0.0\n    return round((days_present / total_days) * 100, 2)",
+            explanation: "Safeguards against zero division and returns the rounded attendance percentage."
+        },
+        {
+            id: 10, sheet: 1, num: 10, difficulty: "Hard", marks: 2.5, topic: "String Formatting & Multi-Branch Return",
+            title: "Student Performance Report Generator",
+            scenario: "An LMS dashboard generates a concise single-line summary report showing a student's name, average score, and grade tier.",
+            problem: "Create a function `generate_student_report(name, m1, m2, m3)` that computes the average of 3 marks and returns `'Name: <name> | Avg: <avg> | Grade: <grade>'` where `<avg>` is rounded to 1 decimal place and Grade is `'A'` (>=80), `'B'` (>=60), or `'C'` (<60).",
+            funcName: "generate_student_report",
+            params: "name, m1, m2, m3",
+            returnDesc: "Formatted report string.",
+            sampleCall: "print(generate_student_report('Aarav', 85, 90, 80))",
+            expectedOut: "Name: Aarav | Avg: 85.0 | Grade: A",
+            hint: "Compute `avg = round((m1 + m2 + m3) / 3, 1)`, determine `grade` using `if/elif/else`, and return an f-string.",
+            starterCode: "def generate_student_report(name, m1, m2, m3):\n    # Write your logic here\n    pass\n\nprint(generate_student_report('Aarav', 85, 90, 80))\n",
+            testCases: [
+                { call: "generate_student_report('Aarav', 85, 90, 80)", expected: "Name: Aarav | Avg: 85.0 | Grade: A" },
+                { call: "generate_student_report('Diya', 65, 70, 60)", expected: "Name: Diya | Avg: 65.0 | Grade: B" },
+                { call: "generate_student_report('Rohan', 45, 50, 55)", expected: "Name: Rohan | Avg: 50.0 | Grade: C" }
+            ],
+            solution: "def generate_student_report(name, m1, m2, m3):\n    avg = round((m1 + m2 + m3) / 3, 1)\n    if avg >= 80:\n        grade = 'A'\n    elif avg >= 60:\n        grade = 'B'\n    else:\n        grade = 'C'\n    return f\"Name: {name} | Avg: {avg} | Grade: {grade}\"",
+            explanation: "Combines numerical aggregation, conditional grade mapping, and structured f-string output."
+        },
+
+        // ==================== SHEET 2: ADVANCED FUNCTION ARGUMENTS (Q11 - Q20) ====================
+        {
+            id: 11, sheet: 2, num: 1, difficulty: "Easy", marks: 2.5, topic: "Default Arguments",
+            title: "Employee Salary Calculator with Default Allowance",
+            scenario: "Most employees receive a standard ₹5,000 monthly allowance unless a custom allowance is specified during hiring.",
+            problem: "Create a function `calculate_salary(basic, allowance=5000)` using a default argument for `allowance` that returns `basic + allowance`.",
+            funcName: "calculate_salary",
+            params: "basic, allowance=5000",
+            returnDesc: "Returns total salary (basic + allowance).",
+            sampleCall: "print(calculate_salary(25000))\nprint(calculate_salary(25000, 8000))",
+            expectedOut: "30000\n33000",
+            hint: "Define the parameter as `allowance=5000` in the function header.",
+            starterCode: "def calculate_salary(basic, allowance=5000):\n    # Write your logic here\n    pass\n\nprint(calculate_salary(25000))\nprint(calculate_salary(25000, 8000))\n",
+            testCases: [
+                { call: "calculate_salary(25000)", expected: 30000 },
+                { call: "calculate_salary(25000, 8000)", expected: 33000 },
+                { call: "calculate_salary(40000, 0)", expected: 40000 }
+            ],
+            solution: "def calculate_salary(basic, allowance=5000):\n    return basic + allowance",
+            explanation: "Demonstrates default parameter values so callers can omit optional arguments."
+        },
+        {
+            id: 12, sheet: 2, num: 2, difficulty: "Easy", marks: 2.5, topic: "Variable-Length Arguments (*args)",
+            title: "Shopping Cart Total using *args",
+            scenario: "A customer's shopping cart can contain any number of items (1 item, 3 items, or 10 items).",
+            problem: "Create a function `cart_total(*prices)` that accepts any number of item prices using `*args` and returns their total sum.",
+            funcName: "cart_total",
+            params: "*prices",
+            returnDesc: "Returns sum of all passed prices (0 if none passed).",
+            sampleCall: "print(cart_total(199, 499, 302))",
+            expectedOut: "1000",
+            hint: "Inside the function, `prices` is a tuple—you can simply return `sum(prices)`.",
+            starterCode: "def cart_total(*prices):\n    # Write your logic here\n    pass\n\nprint(cart_total(199, 499, 302))\n",
+            testCases: [
+                { call: "cart_total(199, 499, 302)", expected: 1000 },
+                { call: "cart_total(50, 50)", expected: 100 },
+                { call: "cart_total()", expected: 0 }
+            ],
+            solution: "def cart_total(*prices):\n    return sum(prices)",
+            explanation: "`*prices` collects arbitrary positional arguments into a tuple, allowing `sum(prices)` to total them effortlessly."
+        },
+        {
+            id: 13, sheet: 2, num: 3, difficulty: "Easy", marks: 2.5, topic: "Default Arguments",
+            title: "Course Fee Calculator with Default Discount",
+            scenario: "Elysium Academy offers a standard 10% early-bird scholarship discount on course fees unless a special scholarship percentage is provided.",
+            problem: "Create a function `calculate_course_fee(fee, discount=10)` that returns the net payable fee after applying `discount%`.",
+            funcName: "calculate_course_fee",
+            params: "fee, discount=10",
+            returnDesc: "Returns payable course fee as float.",
+            sampleCall: "print(calculate_course_fee(20000))\nprint(calculate_course_fee(20000, 25))",
+            expectedOut: "18000.0\n15000.0",
+            hint: "Return `fee - (fee * discount / 100)` with `discount=10` as default.",
+            starterCode: "def calculate_course_fee(fee, discount=10):\n    # Write your logic here\n    pass\n\nprint(calculate_course_fee(20000))\nprint(calculate_course_fee(20000, 25))\n",
+            testCases: [
+                { call: "calculate_course_fee(20000)", expected: 18000.0 },
+                { call: "calculate_course_fee(20000, 25)", expected: 15000.0 },
+                { call: "calculate_course_fee(15000, 0)", expected: 15000.0 }
+            ],
+            solution: "def calculate_course_fee(fee, discount=10):\n    return fee - (fee * discount / 100)",
+            explanation: "Uses a default parameter `discount=10` to simplify standard enrollments while supporting custom scholarships."
+        },
+        {
+            id: 14, sheet: 2, num: 4, difficulty: "Medium", marks: 2.5, topic: "Keyword & Default Arguments",
+            title: "Employee Bonus Calculator using Keyword Arguments",
+            scenario: "Annual performance bonuses are calculated from base salary, bonus percentage, and a fixed festival gift allowance.",
+            problem: "Create a function `calculate_bonus(salary, bonus_pct=10, festival_gift=1000)` so it can be called with positional or keyword arguments. Return the total bonus amount (`salary * bonus_pct / 100 + festival_gift`).",
+            funcName: "calculate_bonus",
+            params: "salary, bonus_pct=10, festival_gift=1000",
+            returnDesc: "Returns total bonus amount.",
+            sampleCall: "print(calculate_bonus(salary=40000, festival_gift=2500))",
+            expectedOut: "6500.0",
+            hint: "Calculate `(salary * bonus_pct / 100) + festival_gift` and return it.",
+            starterCode: "def calculate_bonus(salary, bonus_pct=10, festival_gift=1000):\n    # Write your logic here\n    pass\n\nprint(calculate_bonus(salary=40000, festival_gift=2500))\n",
+            testCases: [
+                { call: "calculate_bonus(salary=40000, festival_gift=2500)", expected: 6500.0 },
+                { call: "calculate_bonus(50000, bonus_pct=20)", expected: 11000.0 },
+                { call: "calculate_bonus(30000)", expected: 4000.0 }
+            ],
+            solution: "def calculate_bonus(salary, bonus_pct=10, festival_gift=1000):\n    return (salary * bonus_pct / 100) + festival_gift",
+            explanation: "Supports flexible keyword argument invocation while keeping sensible defaults for omitted parameters."
+        },
+        {
+            id: 15, sheet: 2, num: 5, difficulty: "Medium", marks: 2.5, topic: "*args Aggregation",
+            title: "Student Average Marks Calculator using *args",
+            scenario: "Different batches take different numbers of module quizzes (e.g., 3 quizzes vs 5 quizzes).",
+            problem: "Create a function `average_marks(*marks)` that accepts any number of marks and returns their average rounded to 2 decimal places. If no marks are provided, return `0.0`.",
+            funcName: "average_marks",
+            params: "*marks",
+            returnDesc: "Returns average rounded to 2 decimal places.",
+            sampleCall: "print(average_marks(80, 90, 85, 95))",
+            expectedOut: "87.5",
+            hint: "Guard against empty `*marks` with `if not marks: return 0.0`, then return `round(sum(marks) / len(marks), 2)`.",
+            starterCode: "def average_marks(*marks):\n    # Write your logic here\n    pass\n\nprint(average_marks(80, 90, 85, 95))\n",
+            testCases: [
+                { call: "average_marks(80, 90, 85, 95)", expected: 87.5 },
+                { call: "average_marks(70, 75, 80)", expected: 75.0 },
+                { call: "average_marks()", expected: 0.0 }
+            ],
+            solution: "def average_marks(*marks):\n    if not marks:\n        return 0.0\n    return round(sum(marks) / len(marks), 2)",
+            explanation: "Handles variable-length score lists cleanly and avoids division-by-zero when called with zero arguments."
+        },
+        {
+            id: 16, sheet: 2, num: 6, difficulty: "Medium", marks: 2.5, topic: "Multiple Return Values",
+            title: "Invoice Generator using Multiple Return Values",
+            scenario: "An accounting module requires a single function that returns subtotal, tax amount, and grand total as a tuple.",
+            problem: "Create a function `generate_invoice(price, qty, tax_rate=18)` that computes `subtotal`, `tax`, and `grand_total`, and returns all three values `(subtotal, tax, grand_total)` rounded to 2 decimal places.",
+            funcName: "generate_invoice",
+            params: "price, qty, tax_rate=18",
+            returnDesc: "Tuple of (subtotal, tax, grand_total).",
+            sampleCall: "print(generate_invoice(500, 2))",
+            expectedOut: "(1000.0, 180.0, 1180.0)",
+            hint: "Use `return round(subtotal, 2), round(tax, 2), round(total, 2)` to return a 3-element tuple.",
+            starterCode: "def generate_invoice(price, qty, tax_rate=18):\n    # Return (subtotal, tax, grand_total)\n    pass\n\nprint(generate_invoice(500, 2))\n",
+            testCases: [
+                { call: "generate_invoice(500, 2)", expected: [1000.0, 180.0, 1180.0] },
+                { call: "generate_invoice(200, 3, 10)", expected: [600.0, 60.0, 660.0] },
+                { call: "generate_invoice(100, 1, 0)", expected: [100.0, 0.0, 100.0] }
+            ],
+            solution: "def generate_invoice(price, qty, tax_rate=18):\n    subtotal = round(float(price * qty), 2)\n    tax = round(subtotal * (tax_rate / 100), 2)\n    total = round(subtotal + tax, 2)\n    return subtotal, tax, total",
+            explanation: "Python functions return comma-separated values as an immutable tuple for clean caller unpacking."
+        },
+        {
+            id: 17, sheet: 2, num: 7, difficulty: "Medium", marks: 2.5, topic: "Keyword Variable-Length Arguments (**kwargs)",
+            title: "Student Profile Generator using **kwargs",
+            scenario: "A student admission form collects dynamic optional attributes like `city`, `course`, `batch`, or `grade`.",
+            problem: "Create a function `build_student_profile(name, **details)` that formats the student's name and sorted keyword attributes into `'Name: <name> | key1=val1, key2=val2'`. If no kwargs are passed, return `'Name: <name>'`.",
+            funcName: "build_student_profile",
+            params: "name, **details",
+            returnDesc: "Formatted profile string with sorted kwargs.",
+            sampleCall: "print(build_student_profile('Ananya', course='Python', city='Madurai'))",
+            expectedOut: "Name: Ananya | city=Madurai, course=Python",
+            hint: "Iterate over `sorted(details.items())`, format each as `f'{k}={v}'`, and join with `', '`.",
+            starterCode: "def build_student_profile(name, **details):\n    # Write your logic here\n    pass\n\nprint(build_student_profile('Ananya', course='Python', city='Madurai'))\n",
+            testCases: [
+                { call: "build_student_profile('Ananya', course='Python', city='Madurai')", expected: "Name: Ananya | city=Madurai, course=Python" },
+                { call: "build_student_profile('Vikram', batch='Morning')", expected: "Name: Vikram | batch=Morning" },
+                { call: "build_student_profile('Meera')", expected: "Name: Meera" }
+            ],
+            solution: "def build_student_profile(name, **details):\n    if not details:\n        return f\"Name: {name}\"\n    pairs = [f\"{k}={v}\" for k, v in sorted(details.items())]\n    return f\"Name: {name} | {', '.join(pairs)}\"",
+            explanation: "Collects arbitrary keyword arguments into the `details` dictionary and formats them deterministically."
+        },
+        {
+            id: 18, sheet: 2, num: 8, difficulty: "Hard", marks: 2.5, topic: "*args + Keyword Argument",
+            title: "Bulk Product Price Calculator with *args & Discount",
+            scenario: "A wholesale checkout accepts any number of item prices via `*prices` along with an optional keyword-only `discount=0` percentage.",
+            problem: "Create a function `bulk_price(*prices, discount=0)` that sums all `prices`, applies `discount%`, and returns the final price rounded to 2 decimal places.",
+            funcName: "bulk_price",
+            params: "*prices, discount=0",
+            returnDesc: "Net payable amount rounded to 2 decimal places.",
+            sampleCall: "print(bulk_price(200, 300, 500, discount=10))",
+            expectedOut: "900.0",
+            hint: "In Python, parameters placed after `*args` automatically act as keyword arguments with optional defaults.",
+            starterCode: "def bulk_price(*prices, discount=0):\n    # Write your logic here\n    pass\n\nprint(bulk_price(200, 300, 500, discount=10))\n",
+            testCases: [
+                { call: "bulk_price(200, 300, 500, discount=10)", expected: 900.0 },
+                { call: "bulk_price(100, 150)", expected: 250.0 },
+                { call: "bulk_price(400, discount=25)", expected: 300.0 }
+            ],
+            solution: "def bulk_price(*prices, discount=0):\n    total = sum(prices)\n    net = total - (total * discount / 100)\n    return round(float(net), 2)",
+            explanation: "Combines `*args` with a keyword-only default argument `discount=0`."
+        },
+        {
+            id: 19, sheet: 2, num: 9, difficulty: "Hard", marks: 2.5, topic: "**kwargs Dictionary Processing",
+            title: "Dynamic Employee Record Dictionary Builder",
+            scenario: "An HR API normalizes incoming employee metadata (`**kwargs`) into a standardized dictionary with a required `emp_id`.",
+            problem: "Create a function `create_employee_record(emp_id, **fields)` that returns a dictionary containing `'emp_id': emp_id` merged with all key-value pairs passed in `fields`.",
+            funcName: "create_employee_record",
+            params: "emp_id, **fields",
+            returnDesc: "Dictionary containing emp_id and all keyword fields.",
+            sampleCall: "print(create_employee_record('EMP01', name='Arjun', dept='IT'))",
+            expectedOut: "{'emp_id': 'EMP01', 'name': 'Arjun', 'dept': 'IT'}",
+            hint: "Create `record = {'emp_id': emp_id}`, call `record.update(fields)`, and return `record`.",
+            starterCode: "def create_employee_record(emp_id, **fields):\n    # Write your logic here\n    pass\n\nprint(create_employee_record('EMP01', name='Arjun', dept='IT'))\n",
+            testCases: [
+                { call: "create_employee_record('EMP01', name='Arjun', dept='IT')", expected: { emp_id: "EMP01", name: "Arjun", dept: "IT" } },
+                { call: "create_employee_record('EMP02', role='Trainer', salary=55000)", expected: { emp_id: "EMP02", role: "Trainer", salary: 55000 } }
+            ],
+            solution: "def create_employee_record(emp_id, **fields):\n    record = {'emp_id': emp_id}\n    record.update(fields)\n    return record",
+            explanation: "Merges required positional ID with dynamic `**fields` into a structured dictionary."
+        },
+        {
+            id: 20, sheet: 2, num: 10, difficulty: "Hard", marks: 2.5, topic: "Reusable Functions + *args + Default Args",
+            title: "Academy Billing System with Reusable Helpers",
+            scenario: "Elysium Academy bills students enrolling in multiple workshops (`*workshop_fees`) with a default 18% GST and optional scholarship discount.",
+            problem: "Define two functions: `apply_discount(amount, discount=0)` returning discounted amount, and `academy_bill(*workshop_fees, discount=0, gst=18)` that calls `apply_discount` on the sum of fees, adds `gst%`, and returns the final rounded bill (2 decimals).",
+            funcName: "academy_bill",
+            params: "*workshop_fees, discount=0, gst=18",
+            returnDesc: "Final payable amount rounded to 2 decimal places.",
+            sampleCall: "print(academy_bill(3000, 2000, discount=10))",
+            expectedOut: "5310.0",
+            hint: "First compute `discounted = apply_discount(sum(workshop_fees), discount)`, then add `discounted * gst / 100`.",
+            starterCode: "def apply_discount(amount, discount=0):\n    # Return amount after discount%\n    pass\n\ndef academy_bill(*workshop_fees, discount=0, gst=18):\n    # Use apply_discount() and add gst%\n    pass\n\nprint(academy_bill(3000, 2000, discount=10))\n",
+            testCases: [
+                { call: "academy_bill(3000, 2000, discount=10)", expected: 5310.0 },
+                { call: "academy_bill(4000, gst=10)", expected: 4400.0 },
+                { call: "academy_bill(1000, 1000, discount=20, gst=0)", expected: 1600.0 }
+            ],
+            solution: "def apply_discount(amount, discount=0):\n    return amount - (amount * discount / 100)\n\ndef academy_bill(*workshop_fees, discount=0, gst=18):\n    discounted = apply_discount(sum(workshop_fees), discount)\n    final = discounted * (1 + gst / 100)\n    return round(float(final), 2)",
+            explanation: "Demonstrates modular decomposition where `academy_bill` delegates discount calculation to `apply_discount`."
+        },
+
+        // ==================== SHEET 3: FUNCTION LOGIC & REUSABILITY (Q21 - Q30) ====================
+        {
+            id: 21, sheet: 3, num: 1, difficulty: "Easy", marks: 2.5, topic: "Function Calling Another Function",
+            title: "Student Grade Calculation using Helper Function",
+            scenario: "An academic portal separates percentage calculation from letter-grade assignment for cleaner modularity.",
+            problem: "Create `compute_percentage(obtained, total)` returning `(obtained / total) * 100`, and `get_student_grade(obtained, total)` that calls `compute_percentage` and returns `'A'` (>=80), `'B'` (>=60), `'C'` (>=40), or `'F'` (<40).",
+            funcName: "get_student_grade",
+            params: "obtained, total",
+            returnDesc: "Letter grade string ('A', 'B', 'C', or 'F').",
+            sampleCall: "print(get_student_grade(420, 500))",
+            expectedOut: "A",
+            hint: "Inside `get_student_grade`, call `pct = compute_percentage(obtained, total)` and check grade thresholds.",
+            starterCode: "def compute_percentage(obtained, total):\n    pass\n\ndef get_student_grade(obtained, total):\n    pass\n\nprint(get_student_grade(420, 500))\n",
+            testCases: [
+                { call: "get_student_grade(420, 500)", expected: "A" },
+                { call: "get_student_grade(325, 500)", expected: "B" },
+                { call: "get_student_grade(220, 500)", expected: "C" },
+                { call: "get_student_grade(150, 500)", expected: "F" }
+            ],
+            solution: "def compute_percentage(obtained, total):\n    return (obtained / total) * 100\n\ndef get_student_grade(obtained, total):\n    pct = compute_percentage(obtained, total)\n    if pct >= 80: return 'A'\n    elif pct >= 60: return 'B'\n    elif pct >= 40: return 'C'\n    return 'F'",
+            explanation: "Separates numerical percentage computation from business grading rules."
+        },
+        {
+            id: 22, sheet: 3, num: 2, difficulty: "Easy", marks: 2.5, topic: "Recursive Functions",
+            title: "Recursive Factorial Calculator",
+            scenario: "A combinatorics utility calculates permutations using a recursive factorial function.",
+            problem: "Create a recursive function `factorial(n)` that returns `1` when `n == 0` or `n == 1`, and `n * factorial(n - 1)` for `n > 1`.",
+            funcName: "factorial",
+            params: "n",
+            returnDesc: "Integer factorial n!",
+            sampleCall: "print(factorial(5))",
+            expectedOut: "120",
+            hint: "Define the base case `if n <= 1: return 1` before calling `factorial(n - 1)`.",
+            starterCode: "def factorial(n):\n    # Implement using recursion\n    pass\n\nprint(factorial(5))\n",
+            testCases: [
+                { call: "factorial(5)", expected: 120 },
+                { call: "factorial(0)", expected: 1 },
+                { call: "factorial(6)", expected: 720 }
+            ],
+            solution: "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n - 1)",
+            explanation: "Classic recursion with base case `n <= 1` and recursive reduction `n * factorial(n - 1)`."
+        },
+        {
+            id: 23, sheet: 3, num: 3, difficulty: "Easy", marks: 2.5, topic: "Lambda Functions",
+            title: "Product Discount Calculator using Lambda",
+            scenario: "An inline pricing rule uses a concise Python `lambda` expression to apply discounts quickly.",
+            problem: "Assign a `lambda` function to a variable named `apply_promo` taking `(price, discount_pct)` and returning `price - (price * discount_pct / 100)`.",
+            funcName: "apply_promo",
+            params: "price, discount_pct",
+            returnDesc: "Discounted price (float).",
+            sampleCall: "print(apply_promo(800, 15))",
+            expectedOut: "680.0",
+            hint: "Syntax: `apply_promo = lambda price, discount_pct: price - (price * discount_pct / 100)`.",
+            starterCode: "# Define lambda function assigned to apply_promo\napply_promo = lambda price, discount_pct: 0\n\nprint(apply_promo(800, 15))\n",
+            testCases: [
+                { call: "apply_promo(800, 15)", expected: 680.0 },
+                { call: "apply_promo(1000, 25)", expected: 750.0 },
+                { call: "apply_promo(500, 0)", expected: 500.0 }
+            ],
+            solution: "apply_promo = lambda price, discount_pct: price - (price * discount_pct / 100)",
+            explanation: "Demonstrates single-expression anonymous `lambda` functions assigned to an identifier."
+        },
+        {
+            id: 24, sheet: 3, num: 4, difficulty: "Medium", marks: 2.5, topic: "Recursive Functions",
+            title: "Recursive Fibonacci Sequence Term Calculator",
+            scenario: "An algorithm benchmark evaluates recursive Fibonacci computation for N-th term lookups (0-indexed: F(0)=0, F(1)=1, F(2)=1, ...).",
+            problem: "Create a recursive function `fibonacci(n)` that returns `0` if `n == 0`, `1` if `n == 1`, and `fibonacci(n - 1) + fibonacci(n - 2)` for `n > 1`.",
+            funcName: "fibonacci",
+            params: "n",
+            returnDesc: "The n-th Fibonacci number (0-indexed).",
+            sampleCall: "print(fibonacci(6))",
+            expectedOut: "8",
+            hint: "Handle `if n <= 0: return 0` and `if n == 1: return 1` as base cases.",
+            starterCode: "def fibonacci(n):\n    # Implement using recursion\n    pass\n\nprint(fibonacci(6))\n",
+            testCases: [
+                { call: "fibonacci(0)", expected: 0 },
+                { call: "fibonacci(1)", expected: 1 },
+                { call: "fibonacci(6)", expected: 8 },
+                { call: "fibonacci(8)", expected: 21 }
+            ],
+            solution: "def fibonacci(n):\n    if n <= 0:\n        return 0\n    if n == 1:\n        return 1\n    return fibonacci(n - 1) + fibonacci(n - 2)",
+            explanation: "Implements dual base cases (0 and 1) and sums the two preceding recursive calls."
+        },
+        {
+            id: 25, sheet: 3, num: 5, difficulty: "Medium", marks: 2.5, topic: "Modular Payroll Helpers",
+            title: "Employee Payroll System using Reusable Functions",
+            scenario: "Payroll calculations split gross pay and tax deduction into two composable functions.",
+            problem: "Create `calc_gross(basic, allowance)` returning `basic + allowance`, `calc_tax(gross)` returning `10%` of gross if `gross > 30000` else `0`, and `net_payroll(basic, allowance)` returning `gross - tax`.",
+            funcName: "net_payroll",
+            params: "basic, allowance",
+            returnDesc: "Net salary after conditional 10% tax.",
+            sampleCall: "print(net_payroll(30000, 5000))",
+            expectedOut: "31500.0",
+            hint: "Inside `net_payroll`, call `g = calc_gross(basic, allowance)` and return `g - calc_tax(g)`.",
+            starterCode: "def calc_gross(basic, allowance):\n    pass\n\ndef calc_tax(gross):\n    pass\n\ndef net_payroll(basic, allowance):\n    pass\n\nprint(net_payroll(30000, 5000))\n",
+            testCases: [
+                { call: "net_payroll(30000, 5000)", expected: 31500.0 },
+                { call: "net_payroll(20000, 5000)", expected: 25000 },
+                { call: "net_payroll(40000, 10000)", expected: 45000.0 }
+            ],
+            solution: "def calc_gross(basic, allowance):\n    return basic + allowance\n\ndef calc_tax(gross):\n    return gross * 0.10 if gross > 30000 else 0\n\ndef net_payroll(basic, allowance):\n    gross = calc_gross(basic, allowance)\n    return gross - calc_tax(gross)",
+            explanation: "Composes `calc_gross` and `calc_tax` inside `net_payroll` for clean separation of concerns."
+        },
+        {
+            id: 26, sheet: 3, num: 6, difficulty: "Medium", marks: 2.5, topic: "Nested Functions & Closure Scope",
+            title: "Nested Function Student Report Generator",
+            scenario: "An assessment engine encapsulates helper status logic inside a parent reporting function.",
+            problem: "Create a function `student_summary(name, scores)` that defines a nested inner function `get_status(avg)` returning `'Pass'` if `avg >= 50` else `'Fail'`. Return `'Name: <name> | Avg: <avg> | Status: <status>'` with `<avg>` rounded to 1 decimal place.",
+            funcName: "student_summary",
+            params: "name, scores",
+            returnDesc: "Formatted summary string using nested helper function.",
+            sampleCall: "print(student_summary('Neha', [70, 80, 90]))",
+            expectedOut: "Name: Neha | Avg: 80.0 | Status: Pass",
+            hint: "Define `def get_status(avg):` indented inside `student_summary` and call it after computing the average of `scores`.",
+            starterCode: "def student_summary(name, scores):\n    def get_status(avg):\n        # Nested helper\n        pass\n    # Compute average and return formatted string\n    pass\n\nprint(student_summary('Neha', [70, 80, 90]))\n",
+            testCases: [
+                { call: "student_summary('Neha', [70, 80, 90])", expected: "Name: Neha | Avg: 80.0 | Status: Pass" },
+                { call: "student_summary('Kiran', [40, 45, 50])", expected: "Name: Kiran | Avg: 45.0 | Status: Fail" }
+            ],
+            solution: "def student_summary(name, scores):\n    def get_status(avg):\n        return 'Pass' if avg >= 50 else 'Fail'\n    avg = round(sum(scores) / len(scores), 1)\n    return f\"Name: {name} | Avg: {avg} | Status: {get_status(avg)}\"",
+            explanation: "Demonstrates lexical scoping with a nested helper function `get_status` inside `student_summary`."
+        },
+        {
+            id: 27, sheet: 3, num: 7, difficulty: "Medium", marks: 2.5, topic: "Local vs Global Scope",
+            title: "Local & Global Scope Transaction Counter",
+            scenario: "An audit tracker maintains a module-level counter `TRANSACTION_COUNT = 0` that increments every time a transaction is logged.",
+            problem: "Declare global `TRANSACTION_COUNT = 0`. Write a function `record_transaction(amount)` that uses the `global` keyword to increment `TRANSACTION_COUNT` by 1 and returns `'Txn #<count>: Rs.<amount>'`.",
+            funcName: "record_transaction",
+            params: "amount",
+            returnDesc: "Formatted transaction log string with updated global counter.",
+            sampleCall: "print(record_transaction(500))\nprint(record_transaction(1200))",
+            expectedOut: "Txn #1: Rs.500\nTxn #2: Rs.1200",
+            hint: "Inside `record_transaction`, write `global TRANSACTION_COUNT` before `TRANSACTION_COUNT += 1`.",
+            starterCode: "TRANSACTION_COUNT = 0\n\ndef record_transaction(amount):\n    # Update global TRANSACTION_COUNT and return formatted string\n    pass\n\nprint(record_transaction(500))\nprint(record_transaction(1200))\n",
+            testCases: [
+                { setup: "TRANSACTION_COUNT = 0", call: "record_transaction(500)", expected: "Txn #1: Rs.500" },
+                { setup: "TRANSACTION_COUNT = 4", call: "record_transaction(1200)", expected: "Txn #5: Rs.1200" }
+            ],
+            solution: "TRANSACTION_COUNT = 0\n\ndef record_transaction(amount):\n    global TRANSACTION_COUNT\n    TRANSACTION_COUNT += 1\n    return f\"Txn #{TRANSACTION_COUNT}: Rs.{amount}\"",
+            explanation: "Uses the `global` keyword so mutations inside local function scope update the module-level state."
+        },
+        {
+            id: 28, sheet: 3, num: 8, difficulty: "Hard", marks: 2.5, topic: "Multi-Function Billing Pipeline",
+            title: "Multi-Function Shopping Billing System",
+            scenario: "An e-commerce backend breaks checkout into item aggregation, tiered discount calculation, and final GST computation.",
+            problem: "Create `items_subtotal(items)` (list of `(price, qty)` tuples), `tiered_discount(subtotal)` (15% if >= 2000, 5% if >= 1000, else 0%), and `final_checkout(items)` returning net payable amount after discount + 5% GST, rounded to 2 decimals.",
+            funcName: "final_checkout",
+            params: "items",
+            returnDesc: "Final payable total rounded to 2 decimal places.",
+            sampleCall: "print(final_checkout([(600, 2), (500, 2)]))",
+            expectedOut: "1963.5",
+            hint: "Subtotal = 2200 -> 15% discount = 1870 -> +5% GST = 1963.5.",
+            starterCode: "def items_subtotal(items):\n    pass\n\ndef tiered_discount(subtotal):\n    pass\n\ndef final_checkout(items):\n    pass\n\nprint(final_checkout([(600, 2), (500, 2)]))\n",
+            testCases: [
+                { call: "final_checkout([(600, 2), (500, 2)])", expected: 1963.5 },
+                { call: "final_checkout([(500, 2), (200, 1)])", expected: 1197.0 },
+                { call: "final_checkout([(200, 2)])", expected: 420.0 }
+            ],
+            solution: "def items_subtotal(items):\n    return sum(p * q for p, q in items)\n\ndef tiered_discount(subtotal):\n    if subtotal >= 2000: return subtotal * 0.15\n    if subtotal >= 1000: return subtotal * 0.05\n    return 0.0\n\ndef final_checkout(items):\n    sub = items_subtotal(items)\n    after_disc = sub - tiered_discount(sub)\n    return round(after_disc * 1.05, 2)",
+            explanation: "Chains three specialized pure functions into a readable, testable checkout pipeline."
+        },
+        {
+            id: 29, sheet: 3, num: 9, difficulty: "Hard", marks: 2.5, topic: "Modular Banking Operations",
+            title: "Function-Based ATM Transaction Calculator",
+            scenario: "An ATM software module uses dedicated functions for deposit and withdrawal operations.",
+            problem: "Create `deposit(balance, amount)` returning `balance + amount`, `withdraw(balance, amount)` returning `balance - amount` if `amount <= balance` else `balance`, and `process_atm(balance, action, amount)` routing `'DEPOSIT'` or `'WITHDRAW'` to the corresponding helper.",
+            funcName: "process_atm",
+            params: "balance, action, amount",
+            returnDesc: "Updated account balance.",
+            sampleCall: "print(process_atm(5000, 'WITHDRAW', 1500))\nprint(process_atm(5000, 'WITHDRAW', 7000))",
+            expectedOut: "3500\n5000",
+            hint: "Route `action == 'DEPOSIT'` to `deposit(balance, amount)` and `action == 'WITHDRAW'` to `withdraw(balance, amount)`.",
+            starterCode: "def deposit(balance, amount):\n    pass\n\ndef withdraw(balance, amount):\n    pass\n\ndef process_atm(balance, action, amount):\n    pass\n\nprint(process_atm(5000, 'WITHDRAW', 1500))\nprint(process_atm(5000, 'WITHDRAW', 7000))\n",
+            testCases: [
+                { call: "process_atm(5000, 'WITHDRAW', 1500)", expected: 3500 },
+                { call: "process_atm(5000, 'WITHDRAW', 7000)", expected: 5000 },
+                { call: "process_atm(2000, 'DEPOSIT', 3000)", expected: 5000 }
+            ],
+            solution: "def deposit(balance, amount):\n    return balance + amount\n\ndef withdraw(balance, amount):\n    return balance - amount if amount <= balance else balance\n\ndef process_atm(balance, action, amount):\n    if action == 'DEPOSIT':\n        return deposit(balance, amount)\n    elif action == 'WITHDRAW':\n        return withdraw(balance, amount)\n    return balance",
+            explanation: "Uses dispatcher pattern in `process_atm` delegating state transitions to `deposit` and `withdraw`."
+        },
+        {
+            id: 30, sheet: 3, num: 10, difficulty: "Hard", marks: 2.5, topic: "Modular Course Fee Management",
+            title: "Modular Course Fee Management System",
+            scenario: "An academy registration system looks up base course fees, applies alumni discounts, and returns final payable fees.",
+            problem: "Create `get_base_fee(course)` (`'Python': 12000`, `'DataScience': 18000`, `'WebDev': 10000`, default `8000`), `alumni_discount(fee, is_alumni)` (20% off if `is_alumni` is True), and `calculate_admission_fee(course, is_alumni=False)` combining both.",
+            funcName: "calculate_admission_fee",
+            params: "course, is_alumni=False",
+            returnDesc: "Final admission fee (float/int).",
+            sampleCall: "print(calculate_admission_fee('Python', True))",
+            expectedOut: "9600.0",
+            hint: "Use a dictionary in `get_base_fee` with `.get(course, 8000)` and pass the result into `alumni_discount`.",
+            starterCode: "def get_base_fee(course):\n    pass\n\ndef alumni_discount(fee, is_alumni):\n    pass\n\ndef calculate_admission_fee(course, is_alumni=False):\n    pass\n\nprint(calculate_admission_fee('Python', True))\n",
+            testCases: [
+                { call: "calculate_admission_fee('Python', True)", expected: 9600.0 },
+                { call: "calculate_admission_fee('DataScience', False)", expected: 18000 },
+                { call: "calculate_admission_fee('Cloud', True)", expected: 6400.0 }
+            ],
+            solution: "def get_base_fee(course):\n    fees = {'Python': 12000, 'DataScience': 18000, 'WebDev': 10000}\n    return fees.get(course, 8000)\n\ndef alumni_discount(fee, is_alumni):\n    return fee * 0.80 if is_alumni else fee\n\ndef calculate_admission_fee(course, is_alumni=False):\n    base = get_base_fee(course)\n    return alumni_discount(base, is_alumni)",
+            explanation: "Cleanly separates catalog lookup (`get_base_fee`) from discount policy (`alumni_discount`)."
+        },
+
+        // ==================== SHEET 4: REAL-TIME FUNCTION-BASED APPLICATIONS (Q31 - Q40) ====================
+        {
+            id: 31, sheet: 4, num: 1, difficulty: "Easy", marks: 2.5, topic: "Multi-Function Student Management",
+            title: "Student Management System (Result & GPA)",
+            scenario: "An academy ERP evaluates student exam records using separate functions for total calculation and pass/fail status.",
+            problem: "Define `calc_avg(marks)` returning average of a list of marks, and `evaluate_student(name, marks)` returning `'Passed'` if `calc_avg(marks) >= 50` and all individual marks >= 35, else `'Failed'`.",
+            funcName: "evaluate_student",
+            params: "name, marks",
+            returnDesc: "'Passed' or 'Failed' string.",
+            sampleCall: "print(evaluate_student('Riya', [75, 80, 65]))\nprint(evaluate_student('Sam', [90, 90, 30]))",
+            expectedOut: "Passed\nFailed",
+            hint: "Check `min(marks) >= 35 and calc_avg(marks) >= 50`.",
+            starterCode: "def calc_avg(marks):\n    pass\n\ndef evaluate_student(name, marks):\n    pass\n\nprint(evaluate_student('Riya', [75, 80, 65]))\nprint(evaluate_student('Sam', [90, 90, 30]))\n",
+            testCases: [
+                { call: "evaluate_student('Riya', [75, 80, 65])", expected: "Passed" },
+                { call: "evaluate_student('Sam', [90, 90, 30])", expected: "Failed" },
+                { call: "evaluate_student('Ali', [45, 48, 49])", expected: "Failed" }
+            ],
+            solution: "def calc_avg(marks):\n    return sum(marks) / len(marks)\n\ndef evaluate_student(name, marks):\n    if min(marks) >= 35 and calc_avg(marks) >= 50:\n        return 'Passed'\n    return 'Failed'",
+            explanation: "Enforces both minimum subject pass marks (35) and overall average threshold (50) using modular functions."
+        },
+        {
+            id: 32, sheet: 4, num: 2, difficulty: "Easy", marks: 2.5, topic: "Library Management Functions",
+            title: "Library Fine Calculator Application",
+            scenario: "A university library charges ₹2/day for the first 5 overdue days and ₹5/day beyond 5 days.",
+            problem: "Create `overdue_days(days_kept, allowed_days=14)` returning `max(0, days_kept - allowed_days)`, and `calculate_library_fine(days_kept, allowed_days=14)` returning the fine amount.",
+            funcName: "calculate_library_fine",
+            params: "days_kept, allowed_days=14",
+            returnDesc: "Integer fine amount in rupees.",
+            sampleCall: "print(calculate_library_fine(21))",
+            expectedOut: "20",
+            hint: "21 - 14 = 7 overdue days -> (5 * 2) + (2 * 5) = 20.",
+            starterCode: "def overdue_days(days_kept, allowed_days=14):\n    pass\n\ndef calculate_library_fine(days_kept, allowed_days=14):\n    pass\n\nprint(calculate_library_fine(21))\n",
+            testCases: [
+                { call: "calculate_library_fine(21)", expected: 20 },
+                { call: "calculate_library_fine(14)", expected: 0 },
+                { call: "calculate_library_fine(18)", expected: 8 }
+            ],
+            solution: "def overdue_days(days_kept, allowed_days=14):\n    return max(0, days_kept - allowed_days)\n\ndef calculate_library_fine(days_kept, allowed_days=14):\n    late = overdue_days(days_kept, allowed_days)\n    if late <= 5:\n        return late * 2\n    return (5 * 2) + (late - 5) * 5",
+            explanation: "Delegates overdue day calculation to `overdue_days` and applies progressive fine tiers."
+        },
+        {
+            id: 33, sheet: 4, num: 3, difficulty: "Easy", marks: 2.5, topic: "Course Registration Application",
+            title: "Course Registration Fee Calculator",
+            scenario: "Students registering for courses pay tuition plus a fixed ₹500 lab fee, with a 10% group discount when registering for 3 or more courses.",
+            problem: "Create `group_discount(total, count)` (returns `total * 0.90` if `count >= 3` else `total`) and `register_courses(course_fees, lab_fee=500)` returning total payable fee.",
+            funcName: "register_courses",
+            params: "course_fees, lab_fee=500",
+            returnDesc: "Total payable registration fee.",
+            sampleCall: "print(register_courses([4000, 3000, 3000]))",
+            expectedOut: "9500.0",
+            hint: "Apply `group_discount(sum(course_fees), len(course_fees))` and then add `lab_fee`.",
+            starterCode: "def group_discount(total, count):\n    pass\n\ndef register_courses(course_fees, lab_fee=500):\n    pass\n\nprint(register_courses([4000, 3000, 3000]))\n",
+            testCases: [
+                { call: "register_courses([4000, 3000, 3000])", expected: 9500.0 },
+                { call: "register_courses([5000, 4000])", expected: 9500 },
+                { call: "register_courses([2000, 2000, 2000], lab_fee=0)", expected: 5400.0 }
+            ],
+            solution: "def group_discount(total, count):\n    return total * 0.90 if count >= 3 else total\n\ndef register_courses(course_fees, lab_fee=500):\n    tuition = group_discount(sum(course_fees), len(course_fees))\n    return tuition + lab_fee",
+            explanation: "Applies conditional multi-course discount to tuition before adding the fixed lab fee."
+        },
+        {
+            id: 34, sheet: 4, num: 4, difficulty: "Medium", marks: 2.5, topic: "Employee Payroll Application",
+            title: "Employee Payroll Management System",
+            scenario: "A company payroll processor computes overtime pay (`1.5x` hourly rate) and deducts 12% Provident Fund (PF) on basic pay.",
+            problem: "Create `calc_overtime(hours, hourly_rate)` returning `hours * hourly_rate * 1.5`, `calc_pf(basic)` returning `basic * 0.12`, and `generate_payslip_net(basic, ot_hours, hourly_rate)` returning `basic + overtime - pf`.",
+            funcName: "generate_payslip_net",
+            params: "basic, ot_hours, hourly_rate",
+            returnDesc: "Net take-home salary.",
+            sampleCall: "print(generate_payslip_net(30000, 10, 200))",
+            expectedOut: "29400.0",
+            hint: "30000 + (10 * 200 * 1.5) - (30000 * 0.12) = 30000 + 3000 - 3600 = 29400.0.",
+            starterCode: "def calc_overtime(hours, hourly_rate):\n    pass\n\ndef calc_pf(basic):\n    pass\n\ndef generate_payslip_net(basic, ot_hours, hourly_rate):\n    pass\n\nprint(generate_payslip_net(30000, 10, 200))\n",
+            testCases: [
+                { call: "generate_payslip_net(30000, 10, 200)", expected: 29400.0 },
+                { call: "generate_payslip_net(25000, 0, 150)", expected: 22000.0 },
+                { call: "generate_payslip_net(40000, 5, 300)", expected: 37450.0 }
+            ],
+            solution: "def calc_overtime(hours, hourly_rate):\n    return hours * hourly_rate * 1.5\n\ndef calc_pf(basic):\n    return basic * 0.12\n\ndef generate_payslip_net(basic, ot_hours, hourly_rate):\n    return basic + calc_overtime(ot_hours, hourly_rate) - calc_pf(basic)",
+            explanation: "Modularizes overtime earnings and PF deductions into separate testable functions."
+        },
+        {
+            id: 35, sheet: 4, num: 5, difficulty: "Medium", marks: 2.5, topic: "Shopping Billing Application",
+            title: "Supermarket Shopping Billing Application",
+            scenario: "A retail billing app calculates line-item totals, checks free-shipping eligibility (free if subtotal >= 500, else ₹60 delivery fee), and returns final bill.",
+            problem: "Create `shipping_charge(subtotal)` returning `0` if `subtotal >= 500` else `60`, and `checkout_cart(cart_dict)` where `cart_dict` maps `{item: (price, qty)}`, returning `subtotal + shipping_charge(subtotal)`.",
+            funcName: "checkout_cart",
+            params: "cart_dict",
+            returnDesc: "Total payable bill including shipping.",
+            sampleCall: "print(checkout_cart({'Milk': (50, 2), 'Bread': (40, 1)}))",
+            expectedOut: "200",
+            hint: "Sum `price * qty` across `cart_dict.values()`, then add `shipping_charge(subtotal)`.",
+            starterCode: "def shipping_charge(subtotal):\n    pass\n\ndef checkout_cart(cart_dict):\n    pass\n\nprint(checkout_cart({'Milk': (50, 2), 'Bread': (40, 1)}))\n",
+            testCases: [
+                { call: "checkout_cart({'Milk': (50, 2), 'Bread': (40, 1)})", expected: 200 },
+                { call: "checkout_cart({'Rice': (300, 2)})", expected: 600 },
+                { call: "checkout_cart({'Tea': (250, 2)})", expected: 500 }
+            ],
+            solution: "def shipping_charge(subtotal):\n    return 0 if subtotal >= 500 else 60\n\ndef checkout_cart(cart_dict):\n    subtotal = sum(p * q for p, q in cart_dict.values())\n    return subtotal + shipping_charge(subtotal)",
+            explanation: "Iterates dictionary values of `(price, qty)` tuples and delegates delivery fee logic to `shipping_charge`."
+        },
+        {
+            id: 36, sheet: 4, num: 6, difficulty: "Medium", marks: 2.5, topic: "Electricity Billing Application",
+            title: "Smart Grid Electricity Billing Application",
+            scenario: "An energy utility calculates consumption charges across 3 slabs plus a fixed meter rent.",
+            problem: "Create `slab_charge(units)` (0–100 @ ₹3, 101–200 @ ₹5, >200 @ ₹8) and `total_power_bill(units, meter_rent=75)` returning `slab_charge(units) + meter_rent`.",
+            funcName: "total_power_bill",
+            params: "units, meter_rent=75",
+            returnDesc: "Total electricity bill including meter rent.",
+            sampleCall: "print(total_power_bill(250))",
+            expectedOut: "1275",
+            hint: "For 250 units: (100*3) + (100*5) + (50*8) = 300 + 500 + 400 = 1200 + 75 = 1275.",
+            starterCode: "def slab_charge(units):\n    pass\n\ndef total_power_bill(units, meter_rent=75):\n    pass\n\nprint(total_power_bill(250))\n",
+            testCases: [
+                { call: "total_power_bill(250)", expected: 1275 },
+                { call: "total_power_bill(80)", expected: 315 },
+                { call: "total_power_bill(150, meter_rent=50)", expected: 600 }
+            ],
+            solution: "def slab_charge(units):\n    if units <= 100:\n        return units * 3\n    elif units <= 200:\n        return (100 * 3) + (units - 100) * 5\n    return (100 * 3) + (100 * 5) + (units - 200) * 8\n\ndef total_power_bill(units, meter_rent=75):\n    return slab_charge(units) + meter_rent",
+            explanation: "Isolates progressive slab math in `slab_charge` and adds fixed meter rent in `total_power_bill`."
+        },
+        {
+            id: 37, sheet: 4, num: 7, difficulty: "Medium", marks: 2.5, topic: "Hotel Booking Billing Application",
+            title: "Hotel Room Booking Bill Calculator",
+            scenario: "A hospitality booking engine computes stay cost from room tier rates, nights stayed, and weekend surcharges.",
+            problem: "Create `room_rate(room_type)` (`'Standard': 2000`, `'Deluxe': 3500`, `'Suite': 6000`), `stay_cost(room_type, nights, is_weekend=False)` (adds 20% surcharge if `is_weekend` is True), and `hotel_invoice(room_type, nights, is_weekend=False, tax=12)` returning final bill rounded to 2 decimals.",
+            funcName: "hotel_invoice",
+            params: "room_type, nights, is_weekend=False, tax=12",
+            returnDesc: "Total hotel bill rounded to 2 decimal places.",
+            sampleCall: "print(hotel_invoice('Deluxe', 2, True))",
+            expectedOut: "9408.0",
+            hint: "Deluxe=3500 * 2 = 7000 -> +20% weekend = 8400 -> +12% tax = 9408.0.",
+            starterCode: "def room_rate(room_type):\n    pass\n\ndef stay_cost(room_type, nights, is_weekend=False):\n    pass\n\ndef hotel_invoice(room_type, nights, is_weekend=False, tax=12):\n    pass\n\nprint(hotel_invoice('Deluxe', 2, True))\n",
+            testCases: [
+                { call: "hotel_invoice('Deluxe', 2, True)", expected: 9408.0 },
+                { call: "hotel_invoice('Standard', 3, False)", expected: 6720.0 },
+                { call: "hotel_invoice('Suite', 1, False, tax=10)", expected: 6600.0 }
+            ],
+            solution: "def room_rate(room_type):\n    rates = {'Standard': 2000, 'Deluxe': 3500, 'Suite': 6000}\n    return rates.get(room_type, 2000)\n\ndef stay_cost(room_type, nights, is_weekend=False):\n    base = room_rate(room_type) * nights\n    return base * 1.20 if is_weekend else base\n\ndef hotel_invoice(room_type, nights, is_weekend=False, tax=12):\n    cost = stay_cost(room_type, nights, is_weekend)\n    return round(cost * (1 + tax / 100), 2)",
+            explanation: "Three-stage pricing pipeline combining rate lookup, weekend multiplier, and luxury tax."
+        },
+        {
+            id: 38, sheet: 4, num: 8, difficulty: "Hard", marks: 2.5, topic: "ATM Transaction Batch Application",
+            title: "ATM Multi-Transaction Batch Processor",
+            scenario: "An ATM session processes a sequence of `(action, amount)` tuples starting from an initial balance.",
+            problem: "Create `apply_txn(balance, action, amount)` (`'DEPOSIT'` adds amount; `'WITHDRAW'` subtracts if `amount <= balance` and `amount % 100 == 0`) and `run_atm_session(initial_balance, transactions)` returning the final balance after executing all valid transactions.",
+            funcName: "run_atm_session",
+            params: "initial_balance, transactions",
+            returnDesc: "Final integer/float balance after processing all transactions.",
+            sampleCall: "print(run_atm_session(5000, [('DEPOSIT', 2000), ('WITHDRAW', 1550), ('WITHDRAW', 1500)]))",
+            expectedOut: "5500",
+            hint: "1550 is ignored because it is not a multiple of 100; 5000 + 2000 - 1500 = 5500.",
+            starterCode: "def apply_txn(balance, action, amount):\n    pass\n\ndef run_atm_session(initial_balance, transactions):\n    pass\n\nprint(run_atm_session(5000, [('DEPOSIT', 2000), ('WITHDRAW', 1550), ('WITHDRAW', 1500)]))\n",
+            testCases: [
+                { call: "run_atm_session(5000, [('DEPOSIT', 2000), ('WITHDRAW', 1550), ('WITHDRAW', 1500)])", expected: 5500 },
+                { call: "run_atm_session(1000, [('WITHDRAW', 2000), ('DEPOSIT', 500)])", expected: 1500 },
+                { call: "run_atm_session(3000, [('WITHDRAW', 1000), ('WITHDRAW', 2000)])", expected: 0 }
+            ],
+            solution: "def apply_txn(balance, action, amount):\n    if action == 'DEPOSIT' and amount > 0:\n        return balance + amount\n    elif action == 'WITHDRAW' and amount > 0 and amount <= balance and amount % 100 == 0:\n        return balance - amount\n    return balance\n\ndef run_atm_session(initial_balance, transactions):\n    bal = initial_balance\n    for act, amt in transactions:\n        bal = apply_txn(bal, act, amt)\n    return bal",
+            explanation: "Folds a list of transaction commands over `initial_balance` using validated state transitions."
+        },
+        {
+            id: 39, sheet: 4, num: 9, difficulty: "Hard", marks: 2.5, topic: "Inventory Stock Management",
+            title: "Warehouse Inventory Stock Management System",
+            scenario: "A warehouse inventory engine updates stock levels from restock and sale operations while preventing negative stock.",
+            problem: "Create `update_item(stock, sku, op, qty)` (`'RESTOCK'` adds `qty`; `'SALE'` deducts `qty` only if `stock.get(sku, 0) >= qty`), and `process_inventory(initial_stock, operations)` returning the updated stock dictionary.",
+            funcName: "process_inventory",
+            params: "initial_stock, operations",
+            returnDesc: "Updated dictionary mapping SKU to remaining stock.",
+            sampleCall: "print(process_inventory({'PEN': 10}, [('RESTOCK', 'PEN', 5), ('SALE', 'PEN', 12), ('SALE', 'PEN', 20)]))",
+            expectedOut: "{'PEN': 3}",
+            hint: "Work on a shallow copy `stock = dict(initial_stock)` and call `update_item` for each `(op, sku, qty)` tuple.",
+            starterCode: "def update_item(stock, sku, op, qty):\n    pass\n\ndef process_inventory(initial_stock, operations):\n    pass\n\nprint(process_inventory({'PEN': 10}, [('RESTOCK', 'PEN', 5), ('SALE', 'PEN', 12), ('SALE', 'PEN', 20)]))\n",
+            testCases: [
+                { call: "process_inventory({'PEN': 10}, [('RESTOCK', 'PEN', 5), ('SALE', 'PEN', 12), ('SALE', 'PEN', 20)])", expected: { PEN: 3 } },
+                { call: "process_inventory({'BOOK': 5}, [('RESTOCK', 'BAG', 4), ('SALE', 'BOOK', 2)])", expected: { BOOK: 3, BAG: 4 } }
+            ],
+            solution: "def update_item(stock, sku, op, qty):\n    if op == 'RESTOCK':\n        stock[sku] = stock.get(sku, 0) + qty\n    elif op == 'SALE' and stock.get(sku, 0) >= qty:\n        stock[sku] -= qty\n\ndef process_inventory(initial_stock, operations):\n    stock = dict(initial_stock)\n    for op, sku, qty in operations:\n        update_item(stock, sku, op, qty)\n    return stock",
+            explanation: "Mutates a working copy of inventory safely through `update_item` helper calls."
+        },
+        {
+            id: 40, sheet: 4, num: 10, difficulty: "Hard", marks: 2.5, topic: "Full Academy Analytics Capstone",
+            title: "Elysium Academy Student Performance Report Engine",
+            scenario: "The academy's capstone analytics module processes a dictionary of student mark lists to compute class average and identify the top scorer.",
+            problem: "Create `student_avg(marks)` returning average of a list, `find_topper(records)` returning the name of the student with highest average, and `academy_report(records)` returning `'Topper: <name> | Class Avg: <avg>'` where `<avg>` is the mean of all student averages rounded to 2 decimal places.",
+            funcName: "academy_report",
+            params: "records",
+            returnDesc: "Formatted academy report string.",
+            sampleCall: "print(academy_report({'Aarav': [80, 90], 'Diya': [95, 85]}))",
+            expectedOut: "Topper: Diya | Class Avg: 87.5",
+            hint: "Use `max(records, key=lambda name: student_avg(records[name]))` to find the topper cleanly.",
+            starterCode: "def student_avg(marks):\n    pass\n\ndef find_topper(records):\n    pass\n\ndef academy_report(records):\n    pass\n\nprint(academy_report({'Aarav': [80, 90], 'Diya': [95, 85]}))\n",
+            testCases: [
+                { call: "academy_report({'Aarav': [80, 90], 'Diya': [95, 85]})", expected: "Topper: Diya | Class Avg: 87.5" },
+                { call: "academy_report({'Kiran': [70, 70, 70], 'Meera': [85, 95, 90], 'Dev': [60, 65, 55]})", expected: "Topper: Meera | Class Avg: 73.33" }
+            ],
+            solution: "def student_avg(marks):\n    return sum(marks) / len(marks)\n\ndef find_topper(records):\n    return max(records, key=lambda k: student_avg(records[k]))\n\ndef academy_report(records):\n    topper = find_topper(records)\n    class_avg = round(sum(student_avg(m) for m in records.values()) / len(records), 2)\n    return f\"Topper: {topper} | Class Avg: {class_avg}\"",
+            explanation: "Integrates helper functions, dictionary iteration, and `max(..., key=...)` into a complete reporting engine."
+        }
+    ];
+
+    // =========================================================================
+    // 2. APPLICATION STATE & LOCALSTORAGE PERSISTENCE
+    // =========================================================================
+    let state = {
+        student: { name: "", id: "" },
+        currentSheet: 1,
+        currentQuestionId: 1,
+        trainerUnlocked: false,
+        // submissions[qId] = { code, passed, total, structureMarks, logicMarks, tcMarks, marks, status }
+        submissions: {},
+        completedSheets: {}
+    };
+
+    let editor = null;
+    let pyodide = null;
+    let pyodideReady = false;
+    let dashChart = null;
+
+    function loadState() {
+        const saved = localStorage.getItem('elysium_function_lab_v1');
+        if (saved) {
+            try {
+                state = { ...state, ...JSON.parse(saved) };
+            } catch (e) { console.error("State restore error:", e); }
+        }
+        if (state.student && state.student.name && state.student.id) {
+            document.getElementById('reg-modal').classList.add('hidden');
+            updateStudentIdentityUI();
+        }
+    }
+
+    function saveState() {
+        localStorage.setItem('elysium_function_lab_v1', JSON.stringify(state));
+    }
+
+    function showToast(msg, type = 'info') {
+        const toast = document.getElementById('toast');
+        const icon = document.getElementById('toast-icon');
+        document.getElementById('toast-msg').textContent = msg;
+        icon.className = type === 'success' ? 'fas fa-check-circle text-emerald-400' :
+                         type === 'error' ? 'fas fa-exclamation-triangle text-rose-400' :
+                         'fas fa-info-circle text-indigo-400';
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 3200);
+    }
+
+    // =========================================================================
+    // 3. PYODIDE WEBASSEMBLY RUNTIME & BEGINNER-FRIENDLY ERROR DIAGNOSTICS
+    // =========================================================================
+    async function initPyodideRuntime() {
+        const statusEl = document.getElementById('py-status');
+        try {
+            pyodide = await loadPyodide();
+            pyodideReady = true;
+            statusEl.className = "hidden xl:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+            statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>Python 3.11 Runtime Ready</span>`;
+        } catch (err) {
+            statusEl.className = "hidden xl:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20";
+            statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400"></span><span>Python Runtime Error</span>`;
+        }
+    }
+
+    function getBeginnerErrorExplanation(errType, errMsg) {
+        const map = {
+            "NameError": "Function or variable name is not defined. Check spelling and make sure you defined the exact required function name.",
+            "TypeError": "Incorrect argument count or data type. Check how many parameters your function accepts and what types you are combining.",
+            "SyntaxError": "Check your Python syntax—look for missing colons (:), unclosed parentheses (), or invalid keywords.",
+            "IndentationError": "Check your indentation. All code inside a `def`, `if`, or `for` block must be indented consistently (4 spaces).",
+            "ZeroDivisionError": "You attempted to divide by zero. Guard denominator values before dividing.",
+            "IndexError": "List or tuple index is out of range.",
+            "KeyError": "Dictionary key was not found. Consider using `.get(key, default)`."
+        };
+        return map[errType] || "Review your function logic, return statement, and variable values.";
+    }
+
+    // Execute arbitrary student Python code for "RUN CODE"
+    async function executeFreeRun(userCode) {
+        if (!pyodideReady) {
+            return { ok: false, stdout: "", errorType: "RuntimeLoading", errorMsg: "Python runtime is still initializing. Please wait a moment.", line: null };
+        }
+        const blocked = ['import os', 'import subprocess', 'import shutil', 'open(', '__import__'];
+        for (const b of blocked) {
+            if (userCode.includes(b)) {
+                return { ok: false, stdout: "", errorType: "SecurityError", errorMsg: `Restricted operation '${b}' is blocked in sandbox.`, line: null };
+            }
+        }
+
+        pyodide.globals.set("__student_code__", userCode);
+        const runner = `
+import sys, io, traceback
+
+_buf = io.StringIO()
+_old = sys.stdout
+sys.stdout = _buf
+_ok = True
+_err_type = ""
+_err_msg = ""
+_err_line = None
+
+try:
+    _ns = {"__name__": "__main__"}
+    exec(__student_code__, _ns)
+except SyntaxError as e:
+    _ok = False
+    _err_type = "SyntaxError"
+    _err_msg = str(e.msg)
+    _err_line = e.lineno
+except Exception as e:
+    _ok = False
+    _err_type = type(e).__name__
+    _err_msg = str(e)
+    tb = traceback.extract_tb(e.__traceback__)
+    for frame in reversed(tb):
+        if frame.filename == "<string>":
+            _err_line = frame.lineno
+            break
+finally:
+    sys.stdout = _old
+
+(_ok, _buf.getvalue(), _err_type, _err_msg, _err_line)
+`;
+        const resProxy = await pyodide.runPythonAsync(runner);
+        const [ok, stdout, errorType, errorMsg, line] = resProxy.toJs();
+        resProxy.destroy();
+        return { ok, stdout: stdout.replace(/\r\n/g, '\n').trimEnd(), errorType, errorMsg, line };
+    }
+
+    // Execute automated function test cases for "SUBMIT ANSWER"
+    async function evaluateFunctionTestCases(userCode, question) {
+        if (!pyodideReady) {
+            return { error: "Python runtime is still loading. Please wait 2 seconds." };
+        }
+        const blocked = ['import os', 'import subprocess', 'import shutil', 'open(', '__import__'];
+        for (const b of blocked) {
+            if (userCode.includes(b)) {
+                return { error: `SecurityError: Restricted operation '${b}' blocked.` };
+            }
+        }
+
+        pyodide.globals.set("__student_code__", userCode);
+        pyodide.globals.set("__func_name__", question.funcName);
+        pyodide.globals.set("__test_cases_json__", JSON.stringify(question.testCases));
+
+        const harness = `
+import json, sys, io
+
+_cases = json.loads(__test_cases_json__)
+_results = []
+_func_defined = False
+_compile_error = ""
+
+for idx, tc in enumerate(_cases):
+    _buf = io.StringIO()
+    _old = sys.stdout
+    sys.stdout = _buf
+    try:
+        _ns = {"__name__": "__sandbox__"}
+        if tc.get("setup"):
+            exec(tc["setup"], _ns)
+        exec(__student_code__, _ns)
+        if __func_name__ not in _ns or not callable(_ns[__func_name__]):
+            _compile_error = f"NameError: Function '{__func_name__}' is not defined."
+            sys.stdout = _old
+            break
+        _func_defined = True
+        actual_val = eval(tc["call"], _ns)
+        expected_val = tc["expected"]
+        # Compare floats with tolerance, or exact equality for strings/ints/lists/dicts
+        if isinstance(expected_val, float) and isinstance(actual_val, (int, float)):
+            passed = abs(float(actual_val) - expected_val) < 1e-4
+        else:
+            passed = (actual_val == expected_val)
+        _results.append({
+            "passed": bool(passed),
+            "call": tc["call"],
+            "expected": repr(expected_val),
+            "actual": repr(actual_val),
+            "error": ""
+        })
+    except Exception as e:
+        _results.append({
+            "passed": False,
+            "call": tc["call"],
+            "expected": repr(tc["expected"]),
+            "actual": "Error",
+            "error": f"{type(e).__name__}: {e}"
+        })
+    finally:
+        sys.stdout = _old
+
+json.dumps({"func_defined": _func_defined, "compile_error": _compile_error, "results": _results})
+`;
+        const jsonStr = await pyodide.runPythonAsync(harness);
+        return JSON.parse(jsonStr);
+    }
+
+    // =========================================================================
+    // 4. UI NAVIGATION & METRICS ENGINE
+    // =========================================================================
+    function switchView(viewName) {
+        ['dashboard', 'workspace', 'evaluation', 'trainer', 'docs'].forEach(v => {
+            document.getElementById(`view-${v}`).classList.add('hidden');
+            const btn = document.getElementById(`nav-${v}`);
+            if (btn) {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                if (v !== 'trainer' && v !== 'docs') btn.classList.add('text-slate-400');
+            }
+        });
+
+        document.getElementById(`view-${viewName}`).classList.remove('hidden');
+        const activeBtn = document.getElementById(`nav-${viewName}`);
+        if (activeBtn && viewName !== 'trainer' && viewName !== 'docs') {
+            activeBtn.classList.add('bg-indigo-600', 'text-white');
+            activeBtn.classList.remove('text-slate-400');
+        }
+
+        if (viewName === 'dashboard') renderDashboard();
+        if (viewName === 'workspace') {
+            renderWorkspace();
+            setTimeout(() => editor && editor.refresh(), 50);
+        }
+        if (viewName === 'evaluation') renderEvaluationScorecard();
+        if (viewName === 'trainer') renderTrainerDashboard();
+    }
+
+    function updateStudentIdentityUI() {
+        const name = state.student.name || "Student";
+        const id = state.student.id || "---";
+        document.getElementById('header-student-name').textContent = name;
+        document.getElementById('header-student-id').textContent = `ID: ${id}`;
+        document.getElementById('header-avatar').textContent = name.charAt(0).toUpperCase();
+        document.getElementById('dash-student-name').textContent = name;
+        document.getElementById('dash-student-id').textContent = id;
+        document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function getPerformanceLevel(score) {
+        if (score >= 90) return { label: "Excellent", color: "text-emerald-400", badge: "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" };
+        if (score >= 75) return { label: "Very Good", color: "text-indigo-400", badge: "bg-indigo-500/15 border-indigo-500/30 text-indigo-300" };
+        if (score >= 60) return { label: "Good", color: "text-sky-400", badge: "bg-sky-500/15 border-sky-500/30 text-sky-300" };
+        if (score >= 40) return { label: "Needs Improvement", color: "text-amber-400", badge: "bg-amber-500/15 border-amber-500/30 text-amber-300" };
+        return { label: "Requires More Practice", color: "text-rose-400", badge: "bg-rose-500/15 border-rose-500/30 text-rose-300" };
+    }
+
+    function computeMetrics() {
+        let totalScore = 0;
+        let completedCount = 0;
+        let tcPassed = 0;
+        let tcTotal = 0;
+        const sheetStats = {
+            1: { score: 0, solved: 0 },
+            2: { score: 0, solved: 0 },
+            3: { score: 0, solved: 0 },
+            4: { score: 0, solved: 0 }
+        };
+
+        QUESTIONS.forEach(q => {
+            tcTotal += q.testCases.length;
+            const sub = state.submissions[q.id];
+            if (sub) {
+                totalScore += sub.marks || 0;
+                tcPassed += sub.passed || 0;
+                sheetStats[q.sheet].score += sub.marks || 0;
+                if (sub.status === 'solved') {
+                    completedCount++;
+                    sheetStats[q.sheet].solved++;
+                }
+            }
+        });
+
+        totalScore = Math.round(totalScore * 100) / 100;
+        Object.keys(sheetStats).forEach(k => {
+            sheetStats[k].score = Math.round(sheetStats[k].score * 100) / 100;
+        });
+
+        document.getElementById('header-score-pill').textContent = `${totalScore} / 100`;
+        return { totalScore, completedCount, pendingCount: 40 - completedCount, tcPassed, tcTotal, sheetStats };
+    }
+
+    // ==================== RENDER STUDENT DASHBOARD ====================
+    function renderDashboard() {
+        const m = computeMetrics();
+        const perf = getPerformanceLevel(m.totalScore);
+        const pct = Math.round((m.totalScore / 100) * 100);
+
+        document.getElementById('dash-score').textContent = m.totalScore;
+        const gradeBadge = document.getElementById('dash-grade-badge');
+        gradeBadge.textContent = perf.label;
+        gradeBadge.className = `mt-2 inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded border ${perf.badge}`;
+
+        document.getElementById('dash-progress-pct').textContent = pct;
+        document.getElementById('dash-progress-bar').style.width = `${pct}%`;
+        document.getElementById('dash-completed').textContent = m.completedCount;
+        document.getElementById('dash-remaining').textContent = m.pendingCount;
+
+        const grid = document.getElementById('sheet-cards-grid');
+        grid.innerHTML = SHEETS.map(s => {
+            const st = m.sheetStats[s.id];
+            const sheetPct = Math.round((st.solved / 10) * 100);
+            const isDone = state.completedSheets[s.id] || st.solved === 10;
+            return `
+            <div class="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Worksheet 0${s.id}</span>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${isDone ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-300'}">
+                            ${st.solved} / 10 Completed
+                        </span>
+                    </div>
+                    <h3 class="text-base font-bold text-white">${s.title}</h3>
+                    <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${s.description}</p>
+                    <div class="flex flex-wrap gap-1.5 mt-3">
+                        ${s.topics.map(t => `<span class="text-[10px] px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-300">${t}</span>`).join('')}
+                    </div>
+                </div>
+
+                <div class="mt-5 pt-4 border-t border-slate-800">
+                    <div class="flex justify-between text-xs mb-1.5">
+                        <span class="text-slate-400">Marks Obtained: <strong class="text-white">${st.score} / 25</strong></span>
+                        <span class="text-slate-400">${sheetPct}%</span>
+                    </div>
+                    <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden mb-4">
+                        <div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full transition-all duration-500" style="width: ${sheetPct}%"></div>
+                    </div>
+                    <button onclick="openSheet(${s.id})" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-indigo-600 text-white text-xs font-semibold transition flex items-center justify-center gap-2">
+                        <span>${st.solved > 0 ? 'Continue Worksheet' : 'Start Worksheet'}</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+
+        // Chart.js Performance Bar Chart
+        const ctx = document.getElementById('dashboardChart').getContext('2d');
+        if (dashChart) dashChart.destroy();
+        dashChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Sheet 1: Fundamentals', 'Sheet 2: Arguments', 'Sheet 3: Reusability', 'Sheet 4: Applications'],
+                datasets: [{
+                    label: 'Marks Obtained (Out of 25)',
+                    data: [m.sheetStats[1].score, m.sheetStats[2].score, m.sheetStats[3].score, m.sheetStats[4].score],
+                    backgroundColor: ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981'],
+                    borderRadius: 8,
+                    barThickness: 36
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, max: 25, grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#cbd5e1', font: { size: 11 } } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    function openSheet(sheetId) {
+        state.currentSheet = sheetId;
+        const firstQ = QUESTIONS.find(q => q.sheet === sheetId);
+        if (firstQ) state.currentQuestionId = firstQ.id;
+        switchView('workspace');
+    }
+
+    // ==================== RENDER 3-PANEL CODING SIMULATOR ====================
+    function renderWorkspace() {
+        const m = computeMetrics();
+
+        // Sidebar Sheet Switcher Buttons
+        document.getElementById('sidebar-sheet-buttons').innerHTML = SHEETS.map(s => `
+            <button onclick="openSheet(${s.id})" class="px-2.5 py-2 rounded-xl text-xs font-bold transition text-left ${state.currentSheet === s.id ? 'bg-indigo-600 text-white' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'}">
+                <div>Sheet 0${s.id}</div>
+                <div class="text-[10px] font-normal opacity-80 truncate">${s.shortTitle}</div>
+            </button>
+        `).join('');
+
+        document.getElementById('sidebar-sheet-title').textContent = `Sheet ${state.currentSheet}: ${SHEETS[state.currentSheet - 1].shortTitle}`;
+        document.getElementById('sidebar-sheet-score').textContent = `${m.sheetStats[state.currentSheet].score}/25`;
+
+        // Question List for Current Sheet
+        const sheetQs = QUESTIONS.filter(q => q.sheet === state.currentSheet);
+        document.getElementById('question-nav-list').innerHTML = sheetQs.map(q => {
+            const sub = state.submissions[q.id];
+            const active = q.id === state.currentQuestionId;
+            let icon = '<i class="far fa-circle text-slate-600"></i>';
+            if (sub?.status === 'solved') icon = '<i class="fas fa-check-circle text-emerald-400"></i>';
+            else if (sub?.status === 'attempted') icon = '<i class="fas fa-adjust text-amber-400"></i>';
+
+            return `
+            <button onclick="selectQuestion(${q.id})" class="w-full text-left p-2.5 rounded-xl border transition flex items-center justify-between gap-2 ${active ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-slate-950/60 border-slate-800/80 text-slate-300 hover:bg-slate-800/60'}">
+                <div class="truncate">
+                    <div class="text-xs font-bold flex items-center gap-1.5">
+                        ${icon}
+                        <span>Q${q.num}. ${q.title}</span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 pl-5 mt-0.5">${q.difficulty} • ${q.funcName}()</div>
+                </div>
+                <span class="text-[11px] font-mono font-bold ${sub?.status === 'solved' ? 'text-emerald-400' : 'text-slate-500'}">
+                    ${sub ? sub.marks : 0}/2.5
+                </span>
+            </button>`;
+        }).join('');
+
+        // Active Question Details
+        const q = QUESTIONS.find(x => x.id === state.currentQuestionId) || sheetQs[0];
+        document.getElementById('q-breadcrumb').textContent = `Worksheet ${q.sheet} • Question ${q.num} of 10`;
+        document.getElementById('q-title').textContent = q.title;
+        document.getElementById('q-scenario').textContent = q.scenario;
+        document.getElementById('q-problem').textContent = q.problem;
+        document.getElementById('q-func-name').textContent = `${q.funcName}(${q.params})`;
+        document.getElementById('q-params').textContent = q.params;
+        document.getElementById('q-return-desc').textContent = q.returnDesc;
+        document.getElementById('q-sample-in').textContent = q.sampleCall;
+        document.getElementById('q-sample-out').textContent = q.expectedOut;
+
+        // Right Panel Metadata
+        const diffEl = document.getElementById('right-difficulty');
+        diffEl.textContent = q.difficulty;
+        diffEl.className = `font-bold px-2 py-0.5 rounded text-xs ${
+            q.difficulty === 'Easy' ? 'bg-emerald-500/15 text-emerald-400' :
+            q.difficulty === 'Medium' ? 'bg-amber-500/15 text-amber-400' :
+            'bg-rose-500/15 text-rose-400'
+        }`;
+        document.getElementById('right-topic').textContent = q.topic;
+        const sub = state.submissions[q.id];
+        document.getElementById('right-earned-marks').textContent = `${sub ? sub.marks : '0.0'} / 2.5`;
+
+        // Reset Hint Box visibility
+        document.getElementById('hint-box').textContent = q.hint;
+        document.getElementById('hint-box').classList.add('hidden');
+        document.getElementById('hint-placeholder').classList.remove('hidden');
+
+        // Right Progress
+        document.getElementById('right-progress-text').textContent = `${m.completedCount} / 40`;
+        document.getElementById('right-progress-bar').style.width = `${Math.round((m.completedCount / 40) * 100)}%`;
+
+        // Load Saved Code or Starter Code
+        editor.setValue(sub?.code !== undefined ? sub.code : q.starterCode);
+    }
+
+    function autoSaveDraft() {
+        const q = QUESTIONS.find(x => x.id === state.currentQuestionId);
+        if (!q || !editor) return;
+        if (!state.submissions[q.id]) {
+            state.submissions[q.id] = { code: editor.getValue(), passed: 0, total: q.testCases.length, marks: 0, status: 'unsolved' };
+        } else {
+            state.submissions[q.id].code = editor.getValue();
+        }
+        saveState();
+    }
+
+    function selectQuestion(qId) {
+        autoSaveDraft();
+        state.currentQuestionId = qId;
+        clearOutputConsole();
+        document.getElementById('tc-result-summary').textContent = 'Not Submitted';
+        document.getElementById('test-cases-list').innerHTML = `<div class="text-xs text-slate-500 italic p-3 bg-slate-950 rounded-xl border border-slate-800">Click "SUBMIT ANSWER" when ready to validate your function against automated test cases.</div>`;
+        renderWorkspace();
+    }
+
+    function navigateQuestion(delta) {
+        autoSaveDraft();
+        const idx = QUESTIONS.findIndex(q => q.id === state.currentQuestionId);
+        const nextIdx = idx + delta;
+        if (nextIdx >= 0 && nextIdx < QUESTIONS.length) {
+            const target = QUESTIONS[nextIdx];
+            state.currentSheet = target.sheet;
+            state.currentQuestionId = target.id;
+            clearOutputConsole();
+            renderWorkspace();
+        } else {
+            showToast(delta < 0 ? "You are at Question 1." : "You have reached Question 40!", "info");
+        }
+    }
+
+    function saveProgressManual() {
+        autoSaveDraft();
+        showToast("Code and progress saved automatically!", "success");
+    }
+
+    function resetCode() {
+        const q = QUESTIONS.find(x => x.id === state.currentQuestionId);
+        if (!q) return;
+        editor.setValue(q.starterCode);
+        autoSaveDraft();
+        showToast("Starter code restored.", "info");
+    }
+
+    function clearOutputConsole() {
+        document.getElementById('console-exec-badge').textContent = "Status: Ready";
+        document.getElementById('console-exec-badge').className = "text-[11px] font-mono text-slate-400";
+        document.getElementById('console-box').innerHTML = `<span class="text-slate-400">Console cleared. Click "RUN CODE" to test your Python program.</span>`;
+    }
+
+    function toggleHint() {
+        const box = document.getElementById('hint-box');
+        const ph = document.getElementById('hint-placeholder');
+        box.classList.toggle('hidden');
+        ph.classList.toggle('hidden');
+    }
+
+    // ==================== RUN CODE (FREE PRACTICE EXECUTION) ====================
+    async function runCodeOnly() {
+        autoSaveDraft();
+        const code = editor.getValue();
+        const badge = document.getElementById('console-exec-badge');
+        const box = document.getElementById('console-box');
+
+        badge.textContent = "Status: Running...";
+        badge.className = "text-[11px] font-mono text-amber-400";
+        box.textContent = "Executing Python code in browser sandbox...";
+
+        const res = await executeFreeRun(code);
+
+        if (res.ok) {
+            badge.textContent = "Status: Execution Successful";
+            badge.className = "text-[11px] font-mono font-bold text-emerald-400";
+            box.innerHTML = `<div class="text-emerald-400 font-bold mb-1">Status: Execution Successful</div>` +
+                `<div class="text-slate-400">Output:</div>` +
+                `<div class="text-white bg-slate-900 p-2 rounded-lg my-1 border border-slate-800">${escapeHtml(res.stdout || "(No print output produced. Make sure you call print(...) to see output)")}</div>` +
+                `<div class="text-slate-400">Error: <span class="text-emerald-400">None</span></div>`;
+        } else {
+            badge.textContent = "Status: Execution Failed";
+            badge.className = "text-[11px] font-mono font-bold text-rose-400";
+            const friendlyHelp = getBeginnerErrorExplanation(res.errorType, res.errorMsg);
+            box.innerHTML = `<div class="text-rose-400 font-bold mb-1">Status: Execution Failed</div>` +
+                `<div class="text-rose-300">Error Type: <strong>${escapeHtml(res.errorType)}</strong> ${res.line ? `(Line ${res.line})` : ''}</div>` +
+                `<div class="text-slate-200 bg-rose-950/30 border border-rose-500/30 p-2 rounded-lg my-1.5">${escapeHtml(res.errorMsg)}</div>` +
+                `<div class="text-amber-300 text-[11px]"><i class="fas fa-lightbulb mr-1"></i><strong>Debugging Tip:</strong> ${escapeHtml(friendlyHelp)}</div>`;
+        }
+    }
+
+    // ==================== SUBMIT ANSWER (AUTOMATED TEST CASE EVALUATION) ====================
+    async function submitAnswer() {
+        const q = QUESTIONS.find(x => x.id === state.currentQuestionId);
+        if (!q) return;
+
+        autoSaveDraft();
+        const code = editor.getValue();
+        const tcList = document.getElementById('test-cases-list');
+        const tcSummary = document.getElementById('tc-result-summary');
+
+        tcList.innerHTML = `<div class="text-xs text-indigo-400 p-3">Running ${q.testCases.length} automated test cases...</div>`;
+
+        const evalRes = await evaluateFunctionTestCases(code, q);
+        if (evalRes.error || evalRes.compile_error) {
+            const errText = evalRes.error || evalRes.compile_error;
+            tcSummary.textContent = "0 / " + q.testCases.length + " Passed (0.0 / 2.5 Marks)";
+            tcSummary.className = "text-xs font-bold text-rose-400";
+            tcList.innerHTML = `<div class="p-3 rounded-xl bg-rose-950/30 border border-rose-500/30 text-xs text-rose-300">${escapeHtml(errText)}</div>`;
+            state.submissions[q.id] = { code, passed: 0, total: q.testCases.length, marks: 0, status: 'attempted' };
+            saveState();
+            renderWorkspace();
+            showToast("Function check failed. Review the error below.", "error");
+            return;
+        }
+
+        const results = evalRes.results;
+        const totalCases = results.length;
+        const passedCases = results.filter(r => r.passed).length;
+
+        // Marking Rubric (2.5 Marks Total):
+        // - 0.5 marks: Correct function structure (function defined & callable)
+        // - 1.0 mark: Core programming logic (at least 1 test case passes without runtime crash)
+        // - 1.0 mark: Proportional test case results (passedCases / totalCases)
+        const structureMarks = evalRes.func_defined ? 0.5 : 0.0;
+        const logicMarks = passedCases > 0 ? 1.0 : 0.0;
+        const tcMarks = Math.round(((passedCases / totalCases) * 1.0) * 100) / 100;
+        const earnedMarks = Math.round((structureMarks + logicMarks + tcMarks) * 100) / 100;
+        const status = passedCases === totalCases ? 'solved' : 'attempted';
+
+        tcSummary.textContent = `${passedCases}/${totalCases} Passed • ${earnedMarks} / 2.5 Marks`;
+        tcSummary.className = `text-xs font-bold ${passedCases === totalCases ? 'text-emerald-400' : 'text-amber-400'}`;
+
+        tcList.innerHTML = results.map((r, i) => `
+            <div class="p-2.5 rounded-xl border text-xs ${r.passed ? 'bg-emerald-950/25 border-emerald-500/30' : 'bg-rose-950/25 border-rose-500/30'}">
+                <div class="flex items-center justify-between font-bold mb-1">
+                    <span class="${r.passed ? 'text-emerald-400' : 'text-rose-400'}">
+                        <i class="fas ${r.passed ? 'fa-check-circle' : 'fa-times-circle'} mr-1"></i>Test Case #${i + 1}
+                    </span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded ${r.passed ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
+                        ${r.passed ? 'PASSED' : 'FAILED'}
+                    </span>
+                </div>
+                <div class="font-mono text-[11px] text-slate-400">Call: <span class="text-slate-200">${escapeHtml(r.call)}</span></div>
+                <div class="font-mono text-[11px] text-slate-400">Expected: <span class="text-emerald-400">${escapeHtml(r.expected)}</span></div>
+                <div class="font-mono text-[11px] text-slate-400">Actual: <span class="${r.passed ? 'text-emerald-300' : 'text-rose-300'}">${escapeHtml(r.error ? r.error : r.actual)}</span></div>
+            </div>
+        `).join('');
+
+        state.submissions[q.id] = { code, passed: passedCases, total: totalCases, marks: earnedMarks, status };
+        saveState();
+        renderWorkspace();
+        computeMetrics();
+
+        if (passedCases === totalCases) {
+            showToast(`Excellent! All ${totalCases} test cases passed (+2.5 Marks).`, "success");
+        } else {
+            showToast(`${passedCases}/${totalCases} test cases passed. Earned ${earnedMarks}/2.5 Marks.`, "error");
+        }
+    }
+
+    function finalizeWorksheet() {
+        state.completedSheets[state.currentSheet] = true;
+        saveState();
+        showToast(`Worksheet ${state.currentSheet} saved & marked completed!`, "success");
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // ==================== RENDER EVALUATION SCORECARD & PDF EXPORT ====================
+    function renderEvaluationScorecard() {
+        const m = computeMetrics();
+        const perf = getPerformanceLevel(m.totalScore);
+
+        document.getElementById('eval-student-header').textContent = `${state.student.name} (${state.student.id}) — Assessment Scorecard`;
+        document.getElementById('eval-marks').textContent = m.totalScore;
+        document.getElementById('eval-pct').textContent = m.totalScore;
+        const statusEl = document.getElementById('eval-status');
+        statusEl.textContent = perf.label;
+        statusEl.className = `text-sm font-extrabold mt-2 ${perf.color}`;
+
+        document.getElementById('eval-q-correct').textContent = m.completedCount;
+        document.getElementById('eval-q-incorrect').textContent = m.pendingCount;
+        document.getElementById('eval-tc-passed').textContent = m.tcPassed;
+        document.getElementById('eval-tc-total').textContent = m.tcTotal;
+
+        // Sheet-wise bars
+        document.getElementById('sheet-performance-bars').innerHTML = SHEETS.map(s => {
+            const sc = m.sheetStats[s.id].score;
+            const pct = Math.round((sc / 25) * 100);
+            return `
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                <div class="flex justify-between text-xs font-semibold mb-1.5">
+                    <span class="text-white">${s.title}</span>
+                    <span class="text-indigo-400">${sc} / 25 (${pct}%)</span>
+                </div>
+                <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div class="bg-indigo-500 h-full" style="width: ${pct}%"></div>
+                </div>
+            </div>`;
+        }).join('');
+
+        // Feedback suggestions
+        const tips = [];
+        if (m.sheetStats[1].score < 17.5) tips.push("<strong>Sheet 1 (Function Fundamentals):</strong> Practice writing clean `def` signatures and returning computed values rather than only printing them.");
+        if (m.sheetStats[2].score < 17.5) tips.push("<strong>Sheet 2 (Advanced Arguments):</strong> Review default argument syntax, tuple packing with `*args`, dictionary unpacking with `**kwargs`, and multi-value tuple returns.");
+        if (m.sheetStats[3].score < 17.5) tips.push("<strong>Sheet 3 (Logic & Reusability):</strong> Focus on base cases in recursive functions (`factorial`, `fibonacci`), `lambda` syntax, and decomposing logic into helper functions.");
+        if (m.sheetStats[4].score < 17.5) tips.push("<strong>Sheet 4 (Real-Time Applications):</strong> Practice orchestrating multiple helper functions inside end-to-end business workflows.");
+        if (tips.length === 0) tips.push("<strong>Outstanding Mastery!</strong> You have mastered Python functions, argument unpacking, recursion, and modular application design.");
+
+        document.getElementById('improvement-suggestions').innerHTML = tips.map(t => `
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 leading-relaxed">
+                <i class="fas fa-lightbulb text-amber-400 mr-1.5"></i>${t}
+            </div>
+        `).join('');
+
+        // Table
+        document.getElementById('eval-table-body').innerHTML = QUESTIONS.map(q => {
+            const sub = state.submissions[q.id];
+            const mk = sub ? sub.marks : 0;
+            const tcTxt = sub ? `${sub.passed}/${sub.total}` : `0/${q.testCases.length}`;
+            return `
+            <tr class="hover:bg-slate-800/40">
+                <td class="py-2 px-3 font-mono text-slate-400">Q${q.id}</td>
+                <td class="py-2 px-3 text-slate-300">Sheet ${q.sheet}</td>
+                <td class="py-2 px-3 font-mono text-amber-300">${q.funcName}()</td>
+                <td class="py-2 px-3 font-medium text-white">${q.title}</td>
+                <td class="py-2 px-3">${q.difficulty}</td>
+                <td class="py-2 px-3 font-mono ${sub?.status === 'solved' ? 'text-emerald-400' : 'text-slate-400'}">${tcTxt}</td>
+                <td class="py-2 px-3 font-bold text-indigo-400">${mk} / 2.5</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function downloadPDFReport() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const m = computeMetrics();
+        const perf = getPerformanceLevel(m.totalScore);
+
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 210, 38, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(18);
+        doc.text("Elysium Academy", 14, 16);
+        doc.setFontSize(11);
+        doc.setTextColor(165, 180, 252);
+        doc.text("Python Function Lab – Practical Assessment Scorecard", 14, 25);
+
+        doc.setTextColor(20, 20, 20);
+        doc.setFontSize(10.5);
+        doc.text(`Student Name: ${state.student.name}`, 14, 48);
+        doc.text(`Student ID: ${state.student.id}`, 14, 55);
+        doc.text(`Assessment Date: ${new Date().toLocaleDateString()}`, 135, 48);
+        doc.text(`Final Score: ${m.totalScore} / 100 (${perf.label})`, 135, 55);
+
+        doc.setDrawColor(200, 200, 200);
+        doc.line(14, 61, 196, 61);
+
+        doc.setFontSize(12);
+        doc.text("Worksheet Performance Summary", 14, 70);
+        let y = 78;
+        doc.setFontSize(10);
+        SHEETS.forEach(s => {
+            const st = m.sheetStats[s.id];
+            doc.text(`${s.title}: ${st.score} / 25 Marks (${st.solved}/10 Completed)`, 16, y);
+            y += 7;
+        });
+
+        y += 5;
+        doc.setFontSize(12);
+        doc.text("Question-Wise Marks Breakdown (40 Function Challenges)", 14, y);
+        y += 8;
+        doc.setFontSize(8.5);
+
+        QUESTIONS.forEach(q => {
+            if (y > 278) { doc.addPage(); y = 20; }
+            const sub = state.submissions[q.id];
+            const mk = sub ? sub.marks : 0;
+            doc.text(`Q${q.id} [S${q.sheet}] ${q.funcName}() — ${q.title.substring(0, 38)}`, 14, y);
+            doc.text(`${mk} / 2.5 Marks`, 168, y);
+            y += 6;
+        });
+
+        doc.save(`${state.student.id}_Elysium_Python_Function_Lab_Report.pdf`);
+        showToast("Assessment PDF Report downloaded!", "success");
+    }
+
+    // ==================== TRAINER DASHBOARD & ANSWER KEY ====================
+    function openTrainerAuth() {
+        if (state.trainerUnlocked) switchView('trainer');
+        else document.getElementById('trainer-pin-modal').classList.remove('hidden');
+    }
+
+    function verifyTrainerPin() {
+        const pin = document.getElementById('trainer-pin-input').value.trim();
+        if (pin === '2026') {
+            state.trainerUnlocked = true;
+            document.getElementById('trainer-pin-modal').classList.add('hidden');
+            document.getElementById('trainer-pin-input').value = '';
+            switchView('trainer');
+            showToast("Trainer Answer Key unlocked.", "success");
+        } else {
+            showToast("Incorrect PIN. Use Trainer PIN: 2026", "error");
+        }
+    }
+
+    function lockTrainerView() {
+        state.trainerUnlocked = false;
+        switchView('dashboard');
+        showToast("Trainer Answer Key locked.", "info");
+    }
+
+    function renderTrainerDashboard() {
+        const m = computeMetrics();
+        const perf = getPerformanceLevel(m.totalScore);
+        document.getElementById('trainer-cohort-body').innerHTML = `
+            <tr class="bg-slate-950/60">
+                <td class="py-2.5 px-3 font-mono text-indigo-400">${state.student.id}</td>
+                <td class="py-2.5 px-3 font-semibold text-white">${state.student.name}</td>
+                <td class="py-2.5 px-3">${m.sheetStats[1].score}</td>
+                <td class="py-2.5 px-3">${m.sheetStats[2].score}</td>
+                <td class="py-2.5 px-3">${m.sheetStats[3].score}</td>
+                <td class="py-2.5 px-3">${m.sheetStats[4].score}</td>
+                <td class="py-2.5 px-3 font-bold text-emerald-400">${m.totalScore}</td>
+                <td class="py-2.5 px-3"><span class="${perf.color} font-semibold">${perf.label}</span></td>
+            </tr>
+        `;
+        renderTrainerAnswerKey();
+    }
+
+    function renderTrainerAnswerKey() {
+        const filter = document.getElementById('trainer-sheet-filter').value;
+        const filtered = filter === 'all' ? QUESTIONS : QUESTIONS.filter(q => String(q.sheet) === filter);
+
+        document.getElementById('trainer-answer-list').innerHTML = filtered.map(q => `
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-bold">Sheet ${q.sheet} • Q${q.num}</span>
+                        <h4 class="text-base font-bold text-white">${q.title} (<code class="text-amber-300 text-xs">${q.funcName}()</code>)</h4>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-400">${q.difficulty} • 2.5 Marks • ${q.topic}</span>
+                </div>
+                <p class="text-xs text-slate-300 mb-3">${q.problem}</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-1">Official Python Solution</div>
+                        <pre class="bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-emerald-300 overflow-x-auto">${escapeHtml(q.solution)}</pre>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                            <span class="font-bold text-indigo-400 block mb-0.5">Logic Explanation:</span>
+                            <p class="text-slate-300">${q.explanation}</p>
+                        </div>
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-[11px]">
+                            <span class="font-bold text-slate-400 block mb-1">Automated Test Cases (${q.testCases.length}):</span>
+                            ${q.testCases.map((tc, idx) => `<div class="text-slate-300">TC${idx + 1}: ${escapeHtml(tc.call)} => ${escapeHtml(JSON.stringify(tc.expected))}</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ==================== OPTIONAL FLASK + SQLITE SERVER SOURCE ====================
+    const FLASK_BACKEND_SOURCE = `# ==============================================================================
+# Elysium Academy - Python Function Lab Backend (Flask + SQLite + Subprocess Sandbox)
+# File: backend/app.py
+# ==============================================================================
+import os
+import json
+import sqlite3
+import subprocess
+import tempfile
+from flask import Flask, request, jsonify, g
+
+app = Flask(__name__)
+DATABASE = "elysium_function_lab.db"
+TRAINER_PIN = os.environ.get("TRAINER_PIN", "2026")
+
+def get_db():
+    db = getattr(g, "_database", None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+        db.row_factory = sqlite3.Row
+    return db
+
+@app.teardown_appcontext
+def close_db(exception):
+    db = getattr(g, "_database", None)
+    if db is not None:
+        db.close()
+
+def init_db():
+    with app.app_context():
+        db = get_db()
+        db.executescript("""
+            CREATE TABLE IF NOT EXISTS students (
+                student_id TEXT PRIMARY KEY,
+                full_name TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS evaluations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id TEXT NOT NULL,
+                question_id INTEGER NOT NULL,
+                sheet_id INTEGER NOT NULL,
+                code TEXT NOT NULL,
+                passed_cases INTEGER NOT NULL,
+                total_cases INTEGER NOT NULL,
+                marks REAL NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(student_id, question_id)
+            );
+        """)
+        db.commit()
+
+BLOCKED_CALLS = ["import os", "import sys", "import subprocess", "open(", "__import__", "eval(", "exec("]
+
+def sandbox_eval_function(student_code: str, func_name: str, test_cases: list):
+    for bad in BLOCKED_CALLS:
+        if bad in student_code:
+            return {"error": f"SecurityError: Restricted keyword '{bad}' blocked."}
+
+    harness = f"""
+import json
+{student_code}
+cases = json.loads({json.dumps(json.dumps(test_cases))})
+results = []
+for tc in cases:
+    if tc.get("setup"):
+        exec(tc["setup"])
+    actual = eval(tc["call"])
+    expected = tc["expected"]
+    passed = abs(float(actual) - expected) < 1e-4 if isinstance(expected, float) else (actual == expected)
+    results.append({{"passed": passed, "actual": repr(actual)}})
+print(json.dumps(results))
+"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+        f.write(harness)
+        path = f.name
+
+    try:
+        proc = subprocess.run(["python3", "-I", path], capture_output=True, text=True, timeout=2.0)
+        if proc.returncode != 0:
+            return {"error": proc.stderr.strip()}
+        return {"results": json.loads(proc.stdout.strip())}
+    except subprocess.TimeoutExpired:
+        return {"error": "TimeoutError: Execution exceeded 2.0s limit."}
+    finally:
+        if os.path.exists(path):
+            os.remove(path)
+
+@app.route("/api/submit", methods=["POST"])
+def submit_solution():
+    payload = request.get_json()
+    res = sandbox_eval_function(payload["code"], payload["func_name"], payload["test_cases"])
+    if "error" in res:
+        return jsonify(res), 400
+    passed = sum(1 for r in res["results"] if r["passed"])
+    total = len(res["results"])
+    marks = round(0.5 + (1.0 if passed > 0 else 0.0) + (passed / total), 2)
+    db = get_db()
+    db.execute("""
+        INSERT INTO evaluations (student_id, question_id, sheet_id, code, passed_cases, total_cases, marks)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(student_id, question_id) DO UPDATE SET
+            code=excluded.code, passed_cases=excluded.passed_cases, marks=excluded.marks
+    """, (payload["student_id"], payload["question_id"], payload["sheet_id"], payload["code"], passed, total, marks))
+    db.commit()
+    return jsonify({"passed": passed, "total": total, "marks": marks, "results": res["results"]})
+
+if __name__ == "__main__":
+    init_db()
+    app.run(host="0.0.0.0", port=5000)
+`;
+
+    function copyFlaskCode() {
+        const ta = document.createElement("textarea");
+        ta.value = FLASK_BACKEND_SOURCE;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        showToast("Flask + SQLite backend source copied!", "success");
+    }
+
+    // =========================================================================
+    // 5. BOOTSTRAP ON WINDOW LOAD
+    // =========================================================================
+    window.onload = function () {
+        document.getElementById('flask-source-code').textContent = FLASK_BACKEND_SOURCE;
+
+        editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+            mode: 'python',
+            theme: 'dracula',
+            lineNumbers: true,
+            indentUnit: 4,
+            tabSize: 4,
+            indentWithTabs: false,
+            matchBrackets: true,
+            autoCloseBrackets: true
+        });
+
+        // Auto-save code drafts on edit
+        editor.on('change', () => {
+            autoSaveDraft();
+        });
+
+        document.getElementById('reg-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const name = document.getElementById('input-student-name').value.trim();
+            const id = document.getElementById('input-student-id').value.trim();
+            if (!name || !id) return;
+            state.student = { name, id };
+            saveState();
+            updateStudentIdentityUI();
+            document.getElementById('reg-modal').classList.add('hidden');
+            renderDashboard();
+            showToast(`Welcome to Elysium Academy, ${name}!`, "success");
+        });
+
+        loadState();
+        renderDashboard();
+        initPyodideRuntime();
+    };
+    </script>
+</body>
+</html>
